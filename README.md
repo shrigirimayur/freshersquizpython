@@ -1,39 +1,46 @@
 # CODE BATTLE 2026
 
-A small strict single-tab quiz prototype with a server-authoritative session registry.
+Server-authoritative single-tab quiz platform with separate participant and organizer pages.
 
-## Run
+## Run locally
 
 ```powershell
 node server.js
 ```
 
-Open `http://localhost:3000/` for the participant page.
+Participant page: <http://localhost:3000/>
 
-Open `http://localhost:3000/organizer.html` for the private control room. The default local organizer key is `code-battle-organizer`. Set a private key before an event:
+Organizer page: <http://localhost:3000/organizer.html>
+
+Default local organizer key: `code-battle-organizer`
+
+For an event, set a private key before starting the server:
 
 ```powershell
 $env:ORGANIZER_KEY = "your-private-key"
 node server.js
 ```
 
-Students should never be given the organizer URL or key. The server stores sessions in memory for this prototype; production should use a durable store and proper organizer authentication.
+## Test flow
 
-## Hosting note
+1. Students open the participant page and enter their names.
+2. The organizer sees logged-in students as `ONLINE`.
+3. The organizer selects students and chooses the duration.
+4. `START TEST` begins the server-controlled timer.
+5. Students answer one question at a time using the question map.
+6. `STOP TEST` ends the room. Results and answers are revealed separately.
 
-GitHub Pages only serves static files. It cannot run `server.js`, keep quiz sessions, enforce active tabs, or provide the `/api/*` endpoints. The `github.io` repository pages therefore show the repository documentation, not a complete working quiz. Use a Node-compatible host such as Render for the real participant and organizer URLs. The included `render.yaml` contains the service configuration; set `ORGANIZER_KEY` as a private environment variable on the host.
+## Security model
 
-## Test-room flow
+Each answer includes `participantId`, `sessionId`, and `tabId`. The server verifies the active tab, heartbeat, session, participant name, competition state, duplicate submissions, and timer. Correct answers are not sent to participants until the organizer reveals them.
 
-1. Students open `http://localhost:3000/`, enter their names, and wait. They appear as `ONLINE` in the organizer room.
-2. The organizer opens `/organizer.html`, selects the logged-in students, enters the duration in minutes, and clicks `START TEST`.
-3. Selected students enter the timed quiz. The server owns the end time; answers are rejected after the timer expires.
-4. The organizer can click `STOP TEST` at any time, then reveal results and answers separately.
+The browser also uses BroadcastChannel detection, reconnection, heartbeat status, and optional fullscreen deterrence. Browsers cannot forcibly close unrelated tabs, so use one computer per participant and supervise the room.
 
-## Enforcement model
+## Deployment
 
-Each answer request carries `participantId`, `sessionId`, and `tabId`. The server verifies all three, checks the heartbeat grace period, rejects duplicate submissions, and never sends correct answers until the organizer reveals them. The browser adds BroadcastChannel detection, heartbeats, reconnection, visibility/focus status, and fullscreen deterrence.
+GitHub Pages only displays static files and cannot run `server.js` or the `/api/*` endpoints. Deploy this project to a Node-compatible host such as Render using [render.yaml](render.yaml), then set `ORGANIZER_KEY` as a private environment variable.
 
-Browser-based applications cannot completely control a participant's computer or forcibly close unrelated browser tabs. CODE BATTLE therefore uses server-side session control, single active quiz-tab enforcement, tab detection, timed sessions and supervised event rules.
+Repositories:
 
-For the college event, use one computer per participant, prohibit mobile phones, supervise a computer lab, allow only the quiz website during the competition, and use fullscreen mode if desired.
+- <https://github.com/shrigirimayur/freshersquizpython>
+- <https://github.com/shrigirimayur/freshersquizpythonorganization>
