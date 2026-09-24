@@ -79,10 +79,11 @@ Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/organizer/stop" -Headers $head
 $stopped = Invoke-RestMethod -Uri "$BaseUrl/api/state" -Headers $headers -TimeoutSec 45
 Assert-Equal $stopped.competition.state 'stopped' 'Competition state after stop'
 
-$beforeReveal = $stopped.questions[0].PSObject.Properties.Name -notcontains 'correct'
+$publicBeforeReveal = Invoke-RestMethod -Uri "$BaseUrl/api/state" -TimeoutSec 45
+$beforeReveal = $publicBeforeReveal.questions[0].PSObject.Properties.Name -notcontains 'correct'
 Assert-True $beforeReveal 'Answer key hidden before reveal'
 Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/organizer/reveal-answers" -Headers $headers -ContentType 'application/json' -Body '{}' -TimeoutSec 45 | Out-Null
-$afterReveal = Invoke-RestMethod -Uri "$BaseUrl/api/state" -Headers $headers -TimeoutSec 45
+$afterReveal = Invoke-RestMethod -Uri "$BaseUrl/api/state" -TimeoutSec 45
 Assert-True ($afterReveal.questions[0].PSObject.Properties.Name -contains 'correct') 'Answer key visible after reveal'
 
 Write-Host "PASS  Full smoke test completed for $name" -ForegroundColor Green
