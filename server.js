@@ -47,6 +47,9 @@ function publicQuestions() {
     ? { id, prompt, options, correct, explanation }
     : { id, prompt, options });
 }
+function organizerQuestions() {
+  return questionBank.map(question => ({ ...question }));
+}
 function publicSession(session) {
   return {
     participantId: session.participantId,
@@ -116,7 +119,7 @@ async function route(req, res) {
     return send(res, 200, {
       competition,
       roster: [...roster],
-      questions: publicQuestions(),
+      questions: organizerQuestions(),
       sessions: [...sessions.values()].map(publicSession)
     });
   }
@@ -285,7 +288,26 @@ async function route(req, res) {
       }
       const nextId = questionBank.length ? Math.max(...questionBank.map(q => q.id)) + 1 : 1;
       questionBank.push({ id: nextId, prompt: item.prompt, options: item.options, correct: Number(item.correct), explanation: item.explanation || 'Answer explanation not provided.' });
-      return send(res, 201, { questions: publicQuestions() });
+      return send(res, 201, { questions: organizerQuestions() });
+    }
+
+    if (url.pathname === '/api/organizer/questions/update') {
+      const item = body.question;
+      const index = questionBank.findIndex(question => question.id === Number(body.questionId));
+      if (index < 0) return send(res, 404, { error: 'Question not found.' });
+      if (!item || !item.prompt || !Array.isArray(item.options) || item.options.length !== 4 || !Number.isInteger(item.correct) || item.correct < 0 || item.correct > 3) {
+        return send(res, 400, { error: 'Question payload is invalid.' });
+      }
+      questionBank[index] = { ...questionBank[index], prompt: item.prompt, options: item.options, correct: item.correct, explanation: item.explanation || 'Answer explanation not provided.' };
+      return send(res, 200, { questions: organizerQuestions() });
+    }
+
+    if (url.pathname === '/api/organizer/questions/delete') {
+      const index = questionBank.findIndex(question => question.id === Number(body.questionId));
+      if (index < 0) return send(res, 404, { error: 'Question not found.' });
+      if (questionBank.length <= 1) return send(res, 400, { error: 'Keep at least one question in the question bank.' });
+      questionBank.splice(index, 1);
+      return send(res, 200, { deleted: true, questionId: Number(body.questionId), questions: organizerQuestions() });
     }
   }
 
