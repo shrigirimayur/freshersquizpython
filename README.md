@@ -19,6 +19,10 @@ node server.js
 
 Students should never be given the organizer URL or key. The server stores sessions in memory for this prototype; production should use a durable store and proper organizer authentication.
 
+## Hosting note
+
+GitHub Pages only serves static files. It cannot run `server.js`, keep quiz sessions, enforce active tabs, or provide the `/api/*` endpoints. The `github.io` repository pages therefore show the repository documentation, not a complete working quiz. Use a Node-compatible host such as Render for the real participant and organizer URLs. The included `render.yaml` contains the service configuration; set `ORGANIZER_KEY` as a private environment variable on the host.
+
 ## Test-room flow
 
 1. Students open `http://localhost:3000/`, enter their names, and wait. They appear as `ONLINE` in the organizer room.
