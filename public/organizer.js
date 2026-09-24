@@ -24,7 +24,7 @@ function login() {
 }
 
 function monitorRows(sessions) {
-  return sessions.length ? sessions.map(item => `<tr><td>${escapeHtml(item.participantName)}</td><td><span class="tag ${item.connected ? '' : 'warn'}">${item.connected ? 'ONLINE' : 'OFFLINE'}</span></td><td>${item.sessionId.slice(0,8).toUpperCase()}</td><td><span class="tag ${item.tabStatus !== 'ACTIVE' ? 'warn' : ''}">${escapeHtml(item.tabStatus || item.state)}</span></td></tr>`).join('') : '<tr><td colspan="4" class="muted">No students logged in yet.</td></tr>';
+  return sessions.length ? sessions.map(item => `<tr><td>${escapeHtml(item.participantName)}</td><td><span class="tag ${item.connected ? '' : 'warn'}">${item.connected ? 'ONLINE' : 'OFFLINE'}</span></td><td>${item.sessionId.slice(0,8).toUpperCase()}</td><td><span class="tag ${item.tabStatus !== 'ACTIVE' ? 'warn' : ''}">${escapeHtml(item.tabStatus || item.state)}</span></td><td><button class="btn secondary remove-participant" data-session-id="${item.sessionId}">REMOVE</button></td></tr>`).join('') : '<tr><td colspan="5" class="muted">No students logged in yet.</td></tr>';
 }
 
 function leaderboardRows(sessions) {
@@ -43,7 +43,13 @@ async function renderRoom() {
     shell(`<section class="hero"><div class="eyebrow">Restricted organizer console</div><h1>Run the room.</h1><p class="subhead">Students can log in before the test. Select the online students, choose the duration, then start the test.</p><div class="actions"><button class="btn" id="start">START TEST</button><button class="btn alert" id="stop">STOP TEST</button><button class="btn secondary" id="results">REVEAL RESULTS</button><button class="btn secondary" id="answers">REVEAL ANSWERS</button></div><div class="notice">Current state: <strong id="current-state">${escapeHtml(state.competition.state)}</strong> <span id="test-clock">${state.competition.endsAt ? `ends ${new Date(state.competition.endsAt).toLocaleTimeString()}` : ''}</span></div></section><section class="grid"><div class="panel"><div class="eyebrow">Select students</div><p class="muted">Students who have opened the participant page appear below as online.</p><div class="field"><input id="student-name" placeholder="Student name"><button class="btn secondary" id="add-student">ADD STUDENT</button></div><div>${candidates.length ? candidates.map(name => `<label class="rule"><span>${escapeHtml(name)}</span><input type="checkbox" data-name="${escapeHtml(name)}" ${selected.has(name) ? 'checked' : ''}></label>`).join('') : '<p class="muted">No students logged in yet.</p>'}</div><button class="btn secondary" id="select-all">SELECT ALL</button><label class="field"><span>Test duration in minutes</span><input id="duration-minutes" type="number" min="1" max="180" value="${state.competition.durationMinutes || 30}"></label></div><div class="panel orange"><div class="eyebrow">Add a question</div><div class="field"><input id="question-text" placeholder="Question prompt"><input id="option-a" placeholder="Option A"><input id="option-b" placeholder="Option B"><input id="option-c" placeholder="Option C"><input id="option-d" placeholder="Option D"><input id="correct-index" placeholder="Correct index: 0-3"><input id="explanation" placeholder="Explanation"><button class="btn" id="add-question">ADD QUESTION</button></div><p class="muted">${questions.length} questions configured.</p></div></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Live monitoring</div><table class="table"><thead><tr><th>Participant</th><th>Connection</th><th>Session</th><th>Tab status</th></tr></thead><tbody id="monitor-body">${monitorRows(state.sessions)}</tbody></table></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Leaderboard</div><table class="table"><thead><tr><th>Rank</th><th>Participant</th><th>Score</th><th>Status</th></tr></thead><tbody id="leaderboard-body">${leaderboardRows(state.sessions)}</tbody></table></section>`);
     bindControls(roster);
     roomRefreshTimer = setInterval(refreshRoom, 3000);
-  } catch { organizerKey = ''; sessionStorage.removeItem('organizerKey'); login(); }
+  } catch (error) { showRoomError(error.message); }
+}
+
+function showRoomError(message) {
+  const existing = document.querySelector('#room-error');
+  if (existing) { existing.textContent = message; existing.hidden = false; return; }
+  app.insertAdjacentHTML('afterbegin', `<div class="shell"><div id="room-error" class="notice danger">${escapeHtml(message)}</div></div>`);
 }
 
 function selectedNames() { return [...document.querySelectorAll('input[data-name]:checked')].map(input => input.dataset.name); }
@@ -52,6 +58,7 @@ async function refreshRoom() {
     const state = await getState();
     const monitor = document.querySelector('#monitor-body');
     if (monitor) monitor.innerHTML = monitorRows(state.sessions);
+    document.querySelectorAll('.remove-participant').forEach(button => button.onclick = () => removeParticipant(button.dataset.sessionId));
     const leaderboard = document.querySelector('#leaderboard-body');
     if (leaderboard) leaderboard.innerHTML = leaderboardRows(state.sessions);
     const stateLabel = document.querySelector('#current-state');
@@ -61,13 +68,18 @@ async function refreshRoom() {
   } catch {}
 }
 function bindControls(roster) {
-  document.querySelector('#start').onclick = () => post('/api/organizer/start', { selectedParticipantIds:selectedNames(), durationMinutes:Number(document.querySelector('#duration-minutes').value) }).then(renderRoom);
-  document.querySelector('#stop').onclick = () => post('/api/organizer/stop').then(renderRoom);
-  document.querySelector('#results').onclick = () => post('/api/organizer/reveal-results').then(renderRoom);
-  document.querySelector('#answers').onclick = () => post('/api/organizer/reveal-answers').then(renderRoom);
+  document.querySelectorAll('.remove-participant').forEach(button => button.onclick = () => removeParticipant(button.dataset.sessionId));
+  document.querySelector('#start').onclick = async () => { try { const names = selectedNames(); if (!names.length) throw new Error('Select at least one participant before starting.'); await post('/api/organizer/start', { selectedParticipantIds:names, durationMinutes:Number(document.querySelector('#duration-minutes').value) }); await renderRoom(); } catch (error) { showRoomError(error.message); } };
+  document.querySelector('#stop').onclick = async () => { try { await post('/api/organizer/stop'); await renderRoom(); } catch (error) { showRoomError(error.message); } };
+  document.querySelector('#results').onclick = async () => { try { await post('/api/organizer/reveal-results'); await renderRoom(); } catch (error) { showRoomError(error.message); } };
+  document.querySelector('#answers').onclick = async () => { try { await post('/api/organizer/reveal-answers'); await renderRoom(); } catch (error) { showRoomError(error.message); } };
   document.querySelector('#select-all').onclick = () => post('/api/organizer/roster', { students:roster.map(item => item.name), selectedParticipantIds:roster.map(item => item.name) }).then(renderRoom);
   document.querySelector('#add-student').onclick = () => { const name = document.querySelector('#student-name').value.trim(); if (name) post('/api/organizer/roster', { students:[...roster.map(item => item.name), name], selectedParticipantIds:[...roster.map(item => item.name), name] }).then(renderRoom); };
   document.querySelector('#add-question').onclick = () => { const options = ['a','b','c','d'].map(letter => document.querySelector(`#option-${letter}`).value.trim()); const question = { prompt:document.querySelector('#question-text').value.trim(), options, correct:Number(document.querySelector('#correct-index').value), explanation:document.querySelector('#explanation').value.trim() }; if (question.prompt && options.every(Boolean) && question.correct >= 0 && question.correct <= 3) post('/api/organizer/questions', { question }).then(renderRoom); };
+}
+
+async function removeParticipant(sessionId) {
+  try { await post('/api/organizer/session/delete', { sessionId }); await renderRoom(); } catch (error) { showRoomError(error.message); }
 }
 
 if (organizerKey) renderRoom(); else login();

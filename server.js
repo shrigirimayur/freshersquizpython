@@ -202,6 +202,9 @@ async function route(req, res) {
 
     if (url.pathname === '/api/organizer/start') {
       competition.selectedParticipantIds = Array.from(new Set(body.selectedParticipantIds || competition.selectedParticipantIds || []));
+      if (competition.selectedParticipantIds.length === 0) {
+        return send(res, 400, { error: 'Select at least one participant before starting the test.' });
+      }
       competition.durationMinutes = Math.max(1, Math.min(180, Number(body.durationMinutes) || competition.durationMinutes || 30));
       competition.startedAt = now();
       competition.endsAt = competition.startedAt + competition.durationMinutes * 60 * 1000;
@@ -220,6 +223,15 @@ async function route(req, res) {
         session.state = 'ended';
       }
       return send(res, 200, { competition });
+    }
+
+    if (url.pathname === '/api/organizer/session/delete') {
+      const session = sessions.get(body.sessionId);
+      if (!session) return send(res, 404, { error: 'Participant session not found.' });
+      session.state = 'ended';
+      sessions.delete(body.sessionId);
+      competition.selectedParticipantIds = competition.selectedParticipantIds.filter(name => name !== session.participantName);
+      return send(res, 200, { deleted: true, participantName: session.participantName });
     }
 
     if (url.pathname === '/api/organizer/reveal-results') {
