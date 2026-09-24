@@ -19,7 +19,7 @@ function login() {
   shell(`<section class="hero"><div class="eyebrow">Restricted organizer access</div><h1>Control the room.</h1><p class="subhead">Students use a separate participant page. This page manages the roster, question bank, test state, and result reveals.</p></section><section class="panel lime" style="max-width:600px"><div class="field"><label for="organizer-key">Organizer key</label><input id="organizer-key" type="password" placeholder="Enter organizer key"></div><button class="btn" id="authorize">OPEN CONTROL ROOM</button><div id="login-error" class="notice danger" hidden></div></section>`);
   document.querySelector('#authorize').onclick = async () => {
     organizerKey = document.querySelector('#organizer-key').value;
-    try { await getState(); sessionStorage.setItem('organizerKey', organizerKey); renderRoom(); } catch (error) { const box = document.querySelector('#login-error'); box.textContent = error.message; box.hidden = false; };
+    try { await post('/api/organizer/verify'); sessionStorage.setItem('organizerKey', organizerKey); renderRoom(); } catch (error) { const box = document.querySelector('#login-error'); box.textContent = error.message; box.hidden = false; };
   };
 }
 

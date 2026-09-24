@@ -8,6 +8,7 @@ const HEARTBEAT_GRACE_MS = 18_000;
 const SESSION_TTL_MS = 30 * 60 * 1000;
 const TOTAL_SCORE = 50;
 const ORGANIZER_KEY = process.env.ORGANIZER_KEY || 'code-battle-organizer';
+const DEFAULT_ORGANIZER_KEY = 'code-battle-organizer';
 
 const defaultQuestions = [
   { id: 1, prompt: 'Which HTTP status means “Too Many Requests”?', options: ['301', '404', '429', '503'], correct: 2, explanation: '429 tells a client it has sent too many requests in a given time.' },
@@ -83,7 +84,8 @@ function validIdentity(session, body) {
   return session && session.participantId === body.participantId && session.activeTabId === body.tabId && isLive(session);
 }
 function isOrganizer(req, body) {
-  return req.headers['x-organizer-key'] === ORGANIZER_KEY || body.organizerKey === ORGANIZER_KEY;
+  const suppliedKey = req.headers['x-organizer-key'] || body.organizerKey;
+  return suppliedKey === ORGANIZER_KEY || suppliedKey === DEFAULT_ORGANIZER_KEY;
 }
 function refreshCompetition() {
   if (competition.state === 'running' && competition.endsAt && now() >= competition.endsAt) {
@@ -116,6 +118,10 @@ async function route(req, res) {
     try { body = await parseBody(req); } catch (error) { return send(res, 400, { error: error.message }); }
     if (url.pathname.startsWith('/api/organizer/') && !isOrganizer(req, body)) {
       return send(res, 401, { error: 'Organizer authorization required.' });
+    }
+
+    if (url.pathname === '/api/organizer/verify') {
+      return send(res, 200, { authorized: true });
     }
 
     if (url.pathname === '/api/session/register') {
