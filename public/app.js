@@ -25,7 +25,7 @@ function showBlocker(title, message, button = 'CHECK AGAIN', action = checkSessi
 }
 
 function renderHome() {
-  base(`<section class="hero"><div class="eyebrow">Participant entrance</div><h1>One tab.<br>One shot.</h1><p class="subhead">CODE BATTLE 2026 is a supervised challenge. The organizer controls the room separately; this page is only for taking the quiz.</p></section><section class="panel lime"><div class="eyebrow">Student waiting room</div><h2>Enter the quiz</h2><p>Use your assigned name. Reopening the browser can reconnect to the same attempt.</p><div class="field"><label for="participant-name">Participant name</label><input id="participant-name" placeholder="e.g. Mayur Shah" maxlength="60"></div><button class="btn" id="join">JOIN QUIZ</button><div id="join-error" class="notice" hidden></div></section>`);
+  base(`<section class="hero"><div class="eyebrow">Participant entrance</div><h1>One tab.<br>One shot.</h1><p class="subhead">CODE BATTLE 2026 is a supervised challenge. The organizer controls the room separately; this page is only for taking the quiz.</p></section><section class="panel lime"><div class="eyebrow">Student waiting room</div><h2>Enter the quiz</h2><p>Use your assigned name. Reopening the browser can reconnect to the same attempt.</p><div class="field"><label for="participant-name">Participant name</label><input id="participant-name" placeholder="e.g. Mayur Shrigiri" maxlength="60"></div><button class="btn" id="join">JOIN QUIZ</button><div id="join-error" class="notice" hidden></div></section>`);
   document.querySelector('#join').onclick = join;
 }
 
