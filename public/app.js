@@ -29,7 +29,7 @@ function showBlocker(title, message, button = 'CHECK AGAIN', action = checkSessi
 }
 
 function renderHome() {
-  base(`<section class="hero"><div class="eyebrow">Participant entrance</div><h1>One tab.<br>One shot.</h1><p class="subhead">CODE BATTLE 2026 is a supervised challenge. The organizer controls the room separately; this page is only for taking the quiz.</p></section><section class="panel lime"><div class="eyebrow">Student waiting room</div><h2>Enter the quiz</h2><p>Use your assigned name. Reopening the browser can reconnect to the same attempt.</p><div class="field"><label for="participant-name">Participant name</label><input id="participant-name" placeholder="e.g. Mayur Shrigiri" maxlength="60"></div><button class="btn" id="join">JOIN QUIZ</button><div id="join-error" class="notice" hidden></div></section>`);
+  base(`<section class="hero"><div class="eyebrow">Python technical challenge / 2026</div><h1>One tab.<br>One shot.</h1><p class="subhead">Twenty questions. Fifty points. Your attempt is saved as you progress.</p><div class="entry-meta"><span><strong>20</strong> questions</span><span><strong>50</strong> points</span><span><strong>1</strong> active tab</span></div></section><section class="panel lime"><div class="eyebrow">Student waiting room</div><h2>Enter your name to begin</h2><p>Your name identifies your attempt. Use the same name if you reconnect.</p><div class="field"><label for="participant-name">Participant name</label><input id="participant-name" placeholder="e.g. Mayur Shrigiri" maxlength="60"></div><button class="btn" id="join">JOIN QUIZ</button><div id="join-error" class="notice" hidden></div></section>`);
   document.querySelector('#join').onclick = join;
 }
 
