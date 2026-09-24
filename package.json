@@ -1,0 +1,11 @@
+{
+  "name": "code-battle-2026",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Strict single-tab quiz prototype for CODE BATTLE 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  }
+}
