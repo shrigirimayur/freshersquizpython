@@ -35,7 +35,7 @@ const defaultQuestions = [
 
 const sessions = new Map();
 const roster = [];
-const questionBank = [...defaultQuestions];
+const questionBank = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'python-questions.json'), 'utf8'));
 let competition = { state: 'waiting', fullscreen: false, fullscreenExitMode: 'warning', selectedParticipantIds: [], durationMinutes: 30, startedAt: null, endsAt: null };
 
 function id() { return crypto.randomUUID(); }
@@ -89,6 +89,12 @@ function validIdentity(session, body) {
 function scoreSession(session) {
   return Number((questionBank.reduce((sum, item) => sum + (session.answers.get(item.id) === item.correct ? TOTAL_SCORE / questionBank.length : 0), 0)).toFixed(1));
 }
+function finalizeSession(session) {
+  if (session.state !== 'submitted') {
+    session.state = 'submitted';
+    session.score = scoreSession(session);
+  }
+}
 function isOrganizer(req, body) {
   const suppliedKey = req.headers['x-organizer-key'] || body.organizerKey;
   return suppliedKey === ORGANIZER_KEY || suppliedKey === DEFAULT_ORGANIZER_KEY;
@@ -100,7 +106,7 @@ function organizerHeaderIsValid(req) {
 function refreshCompetition() {
   if (competition.state === 'running' && competition.endsAt && now() >= competition.endsAt) {
     competition = { ...competition, state: 'stopped' };
-    for (const session of sessions.values()) if (session.state === 'quiz') session.state = 'ended';
+    for (const session of sessions.values()) if (session.state === 'quiz') finalizeSession(session);
   }
   return competition;
 }
@@ -236,7 +242,7 @@ async function route(req, res) {
     if (url.pathname === '/api/organizer/stop') {
       competition = { ...competition, state: 'stopped', endsAt: now() };
       for (const session of sessions.values()) {
-        session.state = 'ended';
+        finalizeSession(session);
       }
       return send(res, 200, { competition });
     }
