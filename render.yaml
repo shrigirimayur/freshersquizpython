@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: code-battle-2026
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: ORGANIZER_KEY
+        sync: false
