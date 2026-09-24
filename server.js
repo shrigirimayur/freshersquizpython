@@ -36,15 +36,16 @@ const defaultQuestions = [
 const sessions = new Map();
 const roster = [];
 const questionBank = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'python-questions.json'), 'utf8'));
-let competition = { state: 'waiting', fullscreen: false, fullscreenExitMode: 'warning', selectedParticipantIds: [], durationMinutes: 30, startedAt: null, endsAt: null };
+let competition = { state: 'waiting', fullscreen: false, fullscreenExitMode: 'warning', selectedParticipantIds: [], durationMinutes: 30, startedAt: null, endsAt: null, revealDurationMinutes: 10, revealEndsAt: null };
 
 function id() { return crypto.randomUUID(); }
 function now() { return Date.now(); }
 function normalizeName(name) { return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase(); }
 function isLive(session) { return session && now() - session.lastHeartbeat < HEARTBEAT_GRACE_MS; }
+function revealIsOpen() { return (competition.state === 'results' || competition.state === 'answers') && (!competition.revealEndsAt || now() < competition.revealEndsAt); }
 function publicQuestions() {
   return questionBank.map(({ id, prompt, options, correct, explanation }) => competition.state === 'answers'
-    ? { id, prompt, options, correct, explanation }
+    && revealIsOpen() ? { id, prompt, options, correct, explanation }
     : { id, prompt, options });
 }
 function organizerQuestions() {
@@ -64,8 +65,9 @@ function publicSession(session) {
     tabStatus: session.multipleTabDetected ? 'MULTIPLE TAB DETECTED' : (isLive(session) ? 'ACTIVE' : 'RECONNECTING'),
     multipleTabAt: session.multipleTabAt || null,
     lastHeartbeat: session.lastHeartbeat,
-    resultsRevealed: competition.state === 'results',
-    answersRevealed: competition.state === 'answers',
+    resultsRevealed: competition.state === 'results' && revealIsOpen(),
+    answersRevealed: competition.state === 'answers' && revealIsOpen(),
+    revealEndsAt: competition.revealEndsAt,
     questions: publicQuestions()
   };
 }
@@ -257,12 +259,14 @@ async function route(req, res) {
     }
 
     if (url.pathname === '/api/organizer/reveal-results') {
-      competition = { ...competition, state: 'results' };
+      const minutes = Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10));
+      competition = { ...competition, state: 'results', revealDurationMinutes: minutes, revealEndsAt: now() + minutes * 60 * 1000 };
       return send(res, 200, { competition });
     }
 
     if (url.pathname === '/api/organizer/reveal-answers') {
-      competition = { ...competition, state: 'answers' };
+      const minutes = Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10));
+      competition = { ...competition, state: 'answers', revealDurationMinutes: minutes, revealEndsAt: now() + minutes * 60 * 1000 };
       return send(res, 200, { competition });
     }
 
@@ -272,6 +276,7 @@ async function route(req, res) {
         fullscreen: Boolean(body.fullscreen),
         fullscreenExitMode: body.fullscreenExitMode === 'lock' ? 'lock' : 'warning',
         durationMinutes: Math.max(1, Math.min(180, Number(body.durationMinutes) || competition.durationMinutes || 30)),
+        revealDurationMinutes: Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10)),
         selectedParticipantIds: Array.from(new Set(body.selectedParticipantIds || competition.selectedParticipantIds || []))
       };
       return send(res, 200, { competition });

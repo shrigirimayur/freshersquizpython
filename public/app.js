@@ -210,11 +210,14 @@ async function renderComplete() {
   const state = await post('/api/session/state', session);
   competition = state.competition;
   session = state.session;
-  const resultsVisible = state.competition.state === 'results' || state.competition.state === 'answers';
-  const answersVisible = state.competition.state === 'answers';
+  const revealOpen = (state.competition.state === 'results' || state.competition.state === 'answers') && (!state.competition.revealEndsAt || Date.now() < state.competition.revealEndsAt);
+  const resultsVisible = revealOpen;
+  const answersVisible = revealOpen && state.competition.state === 'answers';
   const questionList = session.questions || [];
   const details = answersVisible ? questionList.map(question => `<div class="rule"><span>${question.id}. ${escapeHtml(question.prompt)}</span><strong>${escapeHtml(question.options[question.correct] || '')}</strong></div>`).join('') : '';
-  base(`<section class="hero"><div class="eyebrow">Submission received</div><h1>Quiz submitted.</h1><p class="subhead">Your answers are stored on the server. Stay in this tab while the organizer prepares the next reveal.</p></section><section class="panel lime"><div class="eyebrow">${resultsVisible ? 'Results revealed' : 'Waiting for organizer'}</div>${resultsVisible ? `<div class="score">${session.score ?? '—'} / 50</div><p>YOUR SCORE</p>` : '<h2>Keep your place.</h2><p>Your score and the answer key are hidden until the organizer reveals them.</p>'}</section>${details ? `<section class="panel" style="margin-top:20px"><div class="eyebrow">Answer key and explanations</div>${details}</section>` : ''}`);
+  const countdown = revealOpen && state.competition.revealEndsAt ? `<p class="muted">This reveal closes in ${formatDuration(state.competition.revealEndsAt - Date.now())}.</p>` : '';
+  base(`<section class="hero"><div class="eyebrow">Submission received</div><h1>Quiz submitted.</h1><p class="subhead">Your answers are stored on the server. Stay in this tab while the organizer prepares the next reveal.</p></section><section class="panel lime"><div class="eyebrow">${resultsVisible ? 'Results revealed' : 'Waiting for organizer'}</div>${resultsVisible ? `<div class="score">${session.score ?? '—'} / 50</div><p>YOUR SCORE</p>${countdown}` : `<h2>${state.competition.state === 'results' || state.competition.state === 'answers' ? 'Reveal window closed.' : 'Keep your place.'}</h2><p>${state.competition.state === 'results' || state.competition.state === 'answers' ? 'The organizer can open another controlled reveal window.' : 'Your score and the answer key are hidden until the organizer reveals them.'}</p>`}</section>${details ? `<section class="panel" style="margin-top:20px"><div class="eyebrow">Answer key and explanations</div>${details}</section>` : ''}`);
+  if (revealOpen && state.competition.revealEndsAt) setTimeout(renderParticipant, Math.max(1000, state.competition.revealEndsAt - Date.now()));
 }
 
 async function renderOrganizer() {
