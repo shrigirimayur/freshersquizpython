@@ -6,6 +6,10 @@ let localMode = null;
 let heartbeatTimer;
 let examTimer;
 let competition = null;
+let waitingRefreshTimer;
+let violationCount = 0;
+let warningVisible = false;
+const MAX_VIOLATIONS = 5;
 
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
 const post = async (url, payload) => {
@@ -38,6 +42,7 @@ async function join() {
     localMode = 'participant';
     broadcast();
     startHeartbeat();
+    requestQuizFullscreen();
     renderParticipant();
   } catch (error) {
     if (error.code === 'MULTIPLE_TAB') {
@@ -89,6 +94,7 @@ function setConnection(connected) {
 }
 
 async function renderParticipant() {
+  clearInterval(waitingRefreshTimer);
   const state = await post('/api/session/state', session);
   competition = state.competition;
   session = state.session;
@@ -98,6 +104,7 @@ async function renderParticipant() {
   if (session.state === 'submitted' || competition?.state === 'results' || competition?.state === 'answers') return renderComplete();
   if (session.state === 'waiting') return renderWaiting();
   if (competition.fullscreen && !document.fullscreenElement) return renderFullscreenGate();
+  requestQuizFullscreen();
   renderQuestion();
 }
 
@@ -126,6 +133,39 @@ function renderStopped() {
   base(`<section class="hero"><div class="eyebrow">Test closed</div><h1>The test has ended.</h1><p class="subhead">The organizer stopped the test or the server timer reached zero. Your saved answers remain recorded on the server.</p></section>`);
 }
 
+function requestQuizFullscreen() {
+  document.documentElement.requestFullscreen?.().catch(() => {});
+}
+
+async function submitCurrentAttempt() {
+  try {
+    session = await post('/api/session/submit', { participantId:session.participantId, sessionId:session.sessionId, tabId });
+    warningVisible = false;
+    renderComplete();
+  } catch (error) {
+    showViolationWarning(error.message);
+  }
+}
+
+function showViolationWarning(message) {
+  if (warningVisible) return;
+  warningVisible = true;
+  base(`<section class="blocker"><div class="blocker-card"><div class="eyebrow">Strict quiz warning ${violationCount}/${MAX_VIOLATIONS}</div><h1>Return to the quiz.</h1><p class="subhead" style="color:#d7e0d8">${escapeHtml(message)} This warning has been recorded. After ${MAX_VIOLATIONS} warnings, your attempt is submitted automatically.</p><div class="actions"><button class="btn" id="return-to-quiz">RETURN TO QUIZ</button></div></div></section>`);
+  document.querySelector('#return-to-quiz').onclick = () => {
+    requestQuizFullscreen();
+    warningVisible = false;
+    renderParticipant();
+  };
+}
+
+function recordViolation(type, message) {
+  if (localMode !== 'participant' || !session || session.state !== 'quiz' || warningVisible) return;
+  violationCount += 1;
+  post('/api/session/event', { ...session, tabId, type, count:violationCount }).catch(() => {});
+  if (violationCount >= MAX_VIOLATIONS) return submitCurrentAttempt();
+  showViolationWarning(message);
+}
+
 function renderFullscreenGate() {
   base(`<section class="hero"><div class="eyebrow">Fullscreen mode enabled</div><h1>Enter fullscreen to start.</h1><p class="subhead">Fullscreen is an additional deterrent, not a security mechanism. Your quiz session remains server-controlled.</p><button class="btn" id="fullscreen-start">ENTER FULLSCREEN</button></section>`);
   document.querySelector('#fullscreen-start').onclick = async () => {
@@ -136,6 +176,7 @@ function renderFullscreenGate() {
 
 function renderWaiting() {
   base(`<section class="hero"><div class="eyebrow">Waiting room / ${escapeHtml(session.participantName)}</div><h1>Stay ready.</h1><p class="subhead">The organizer has not started this test yet. Keep this tab open; your server session is reserved.</p></section><section class="panel lime"><div class="eyebrow">Session registered</div><div class="rule"><span>Session</span><strong>${session.sessionId.slice(0,8).toUpperCase()}</strong></div><div class="rule"><span>Tab status</span><strong>ACTIVE QUIZ TAB</strong></div></section>`);
+  waitingRefreshTimer = setInterval(() => renderParticipant(), 3000);
 }
 
 function renderQuestion() {
@@ -241,8 +282,10 @@ channel?.addEventListener('message', event => {
   }
 });
 
-document.addEventListener('visibilitychange', () => { if (localMode === 'participant' && !document.hidden) broadcast(); });
-document.addEventListener('fullscreenchange', () => { if (localMode === 'participant' && competition?.fullscreen && !document.fullscreenElement) renderFullscreenGate(); });
+document.addEventListener('visibilitychange', () => { if (localMode === 'participant' && document.hidden) recordViolation('NAVIGATION_VIOLATION', 'You left the quiz tab.'); });
+document.addEventListener('fullscreenchange', () => { if (localMode === 'participant' && competition?.state === 'running' && !document.fullscreenElement) recordViolation('FULLSCREEN_VIOLATION', 'Fullscreen mode was exited.'); });
+history.replaceState({ quiz:true }, '', location.href);
+window.addEventListener('popstate', () => { history.pushState({ quiz:true }, '', location.href); recordViolation('NAVIGATION_VIOLATION', 'You tried to go back from the quiz.'); });
 window.addEventListener('beforeunload', () => channel?.postMessage({ type: 'TAB_CLOSING', tabId }));
 window.addEventListener('focus', () => { if (localMode === 'participant') broadcast(); });
 

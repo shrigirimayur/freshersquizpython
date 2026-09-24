@@ -72,6 +72,9 @@ $answerBody = @{ participantId = $login.participantId; sessionId = $login.sessio
 $answer = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/session/answer" -ContentType 'application/json' -Body $answerBody -TimeoutSec 45
 Assert-Equal $answer.answers.PSObject.Properties.Count 1 'Submitted answer count'
 
+$submitted = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/session/submit" -ContentType 'application/json' -Body $stateBody -TimeoutSec 45
+Assert-Equal $submitted.state 'submitted' 'Server-side final submission'
+
 Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/organizer/stop" -Headers $headers -ContentType 'application/json' -Body '{}' -TimeoutSec 45 | Out-Null
 $stopped = Invoke-RestMethod -Uri "$BaseUrl/api/state" -Headers $headers -TimeoutSec 45
 Assert-Equal $stopped.competition.state 'stopped' 'Competition state after stop'

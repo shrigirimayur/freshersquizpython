@@ -83,6 +83,9 @@ function findSession(body) { return sessions.get(body.sessionId); }
 function validIdentity(session, body) {
   return session && session.participantId === body.participantId && session.activeTabId === body.tabId && isLive(session);
 }
+function scoreSession(session) {
+  return Number((questionBank.reduce((sum, item) => sum + (session.answers.get(item.id) === item.correct ? TOTAL_SCORE / questionBank.length : 0), 0)).toFixed(1));
+}
 function isOrganizer(req, body) {
   const suppliedKey = req.headers['x-organizer-key'] || body.organizerKey;
   return suppliedKey === ORGANIZER_KEY || suppliedKey === DEFAULT_ORGANIZER_KEY;
@@ -180,7 +183,17 @@ async function route(req, res) {
       const session = findSession(body);
       if (!validIdentity(session, body)) return send(res, 403, { error: 'Unauthorized quiz tab.' });
       if (body.type === 'MULTIPLE_TAB') { session.multipleTabDetected = true; session.multipleTabAt = now(); }
+      if (body.type === 'FULLSCREEN_VIOLATION' || body.type === 'NAVIGATION_VIOLATION') session.violationCount = Math.max(session.violationCount || 0, Number(body.count) || 0);
       return send(res, 200, { recorded: true });
+    }
+
+    if (url.pathname === '/api/session/submit') {
+      const session = findSession(body);
+      if (!validIdentity(session, body)) return send(res, 403, { error: 'Unauthorized quiz tab.' });
+      if (session.state === 'submitted') return send(res, 409, { error: 'Quiz already submitted.' });
+      session.state = 'submitted';
+      session.score = scoreSession(session);
+      return send(res, 200, publicSession(session));
     }
 
     if (url.pathname === '/api/session/answer') {
@@ -195,7 +208,7 @@ async function route(req, res) {
       session.currentQuestion = Math.min(question.id, questionBank.length);
       if (session.answers.size === questionBank.length) {
         session.state = 'submitted';
-        session.score = Number((questionBank.reduce((sum, item) => sum + (session.answers.get(item.id) === item.correct ? TOTAL_SCORE / questionBank.length : 0), 0)).toFixed(1));
+        session.score = scoreSession(session);
       }
       return send(res, 200, publicSession(session));
     }
