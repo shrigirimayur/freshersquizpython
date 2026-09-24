@@ -87,6 +87,10 @@ function isOrganizer(req, body) {
   const suppliedKey = req.headers['x-organizer-key'] || body.organizerKey;
   return suppliedKey === ORGANIZER_KEY || suppliedKey === DEFAULT_ORGANIZER_KEY;
 }
+function organizerHeaderIsValid(req) {
+  const suppliedKey = req.headers['x-organizer-key'];
+  return suppliedKey === ORGANIZER_KEY || suppliedKey === DEFAULT_ORGANIZER_KEY;
+}
 function refreshCompetition() {
   if (competition.state === 'running' && competition.endsAt && now() >= competition.endsAt) {
     competition = { ...competition, state: 'stopped' };
@@ -103,7 +107,7 @@ async function route(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
   refreshCompetition();
   if (req.method === 'GET' && url.pathname === '/api/state') {
-    if (req.headers['x-organizer-key'] !== ORGANIZER_KEY) {
+    if (!organizerHeaderIsValid(req)) {
       return send(res, 200, { competition, questions: publicQuestions() });
     }
     return send(res, 200, {
