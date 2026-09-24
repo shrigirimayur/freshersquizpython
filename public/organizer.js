@@ -36,6 +36,14 @@ function questionRows(questions) {
   return questions.length ? `<div class="question-admin-list">${questions.map(question => `<div class="rule"><span><strong>Q${question.id}</strong> ${escapeHtml(question.prompt)}</span><span class="actions"><button class="btn secondary edit-question" data-question-id="${question.id}">EDIT</button><button class="btn alert delete-question" data-question-id="${question.id}">DELETE</button></span></div>`).join('')}</div>` : '<p class="muted">No questions configured.</p>';
 }
 
+function dashboardStats(state) {
+  const sessions = state.sessions || [];
+  const selected = new Set(state.competition.selectedParticipantIds || []);
+  const online = sessions.filter(item => item.connected).length;
+  const submitted = sessions.filter(item => item.state === 'submitted').length;
+  return `<section class="room-stats"><div class="stat-card"><span>ONLINE</span><strong id="stat-online">${online}</strong><small>connected students</small></div><div class="stat-card"><span>SELECTED</span><strong id="stat-selected">${selected.size}</strong><small>students in this test</small></div><div class="stat-card"><span>SUBMITTED</span><strong id="stat-submitted">${submitted}</strong><small>completed attempts</small></div><div class="stat-card"><span>QUESTIONS</span><strong id="stat-questions">${state.questions.length}</strong><small>in the current bank</small></div></section>`;
+}
+
 async function renderRoom() {
   try {
     clearInterval(roomRefreshTimer);
@@ -45,6 +53,7 @@ async function renderRoom() {
     const candidates = [...new Set([...roster.map(student => student.name), ...state.sessions.map(item => item.participantName)])];
     const questions = state.questions || [];
     shell(`<section class="hero"><div class="eyebrow">Restricted organizer console</div><h1>Run the room.</h1><p class="subhead">Students can log in before the test. Select the online students, choose the duration, then start the test.</p><div class="actions"><button class="btn" id="start">START TEST</button><button class="btn alert" id="stop">STOP TEST</button><button class="btn secondary" id="results">REVEAL RESULTS</button><button class="btn secondary" id="answers">REVEAL ANSWERS</button></div><div class="notice">Current state: <strong id="current-state">${escapeHtml(state.competition.state)}</strong> <span id="test-clock">${state.competition.endsAt ? `ends ${new Date(state.competition.endsAt).toLocaleTimeString()}` : ''}</span></div></section><section class="grid"><div class="panel"><div class="eyebrow">Select students</div><p class="muted">Students who have opened the participant page appear below as online.</p><div class="field"><input id="student-name" placeholder="Student name"><button class="btn secondary" id="add-student">ADD STUDENT</button></div><div>${candidates.length ? candidates.map(name => `<label class="rule"><span>${escapeHtml(name)}</span><input type="checkbox" data-name="${escapeHtml(name)}" ${selected.has(name) ? 'checked' : ''}></label>`).join('') : '<p class="muted">No students logged in yet.</p>'}</div><button class="btn secondary" id="select-all">SELECT ALL</button><label class="field"><span>Test duration in minutes</span><input id="duration-minutes" type="number" min="1" max="180" value="${state.competition.durationMinutes || 30}"></label></div><div class="panel orange"><div class="eyebrow">Question bank</div><div class="field"><input id="question-text" placeholder="Question prompt"><input id="option-a" placeholder="Option A"><input id="option-b" placeholder="Option B"><input id="option-c" placeholder="Option C"><input id="option-d" placeholder="Option D"><input id="correct-index" placeholder="Correct index: 0-3"><input id="explanation" placeholder="Explanation"><button class="btn" id="add-question">ADD QUESTION</button></div>${questionRows(questions)}</div></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Live monitoring</div><table class="table"><thead><tr><th>Participant</th><th>Connection</th><th>Session</th><th>Tab status</th><th>Actions</th></tr></thead><tbody id="monitor-body">${monitorRows(state.sessions)}</tbody></table></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Leaderboard</div><table class="table"><thead><tr><th>Rank</th><th>Participant</th><th>Score</th><th>Status</th></tr></thead><tbody id="leaderboard-body">${leaderboardRows(state.sessions)}</tbody></table></section>`);
+    document.querySelector('.hero').insertAdjacentHTML('afterend', dashboardStats(state));
     const revealInput = document.createElement('input');
     revealInput.id = 'reveal-duration';
     revealInput.type = 'number';
@@ -99,6 +108,14 @@ async function refreshRoom() {
     if (leaderboard) leaderboard.innerHTML = leaderboardRows(state.sessions);
     const stateLabel = document.querySelector('#current-state');
     if (stateLabel) stateLabel.textContent = state.competition.state;
+    const selectedCount = document.querySelector('#stat-selected');
+    if (selectedCount) selectedCount.textContent = (state.competition.selectedParticipantIds || []).length;
+    const onlineCount = document.querySelector('#stat-online');
+    if (onlineCount) onlineCount.textContent = state.sessions.filter(item => item.connected).length;
+    const submittedCount = document.querySelector('#stat-submitted');
+    if (submittedCount) submittedCount.textContent = state.sessions.filter(item => item.state === 'submitted').length;
+    const questionCount = document.querySelector('#stat-questions');
+    if (questionCount) questionCount.textContent = state.questions.length;
     const clock = document.querySelector('#test-clock');
     if (clock) clock.textContent = state.competition.endsAt ? `ends ${new Date(state.competition.endsAt).toLocaleTimeString()}` : '';
   } catch {}
