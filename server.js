@@ -59,6 +59,7 @@ function publicSession(session) {
     tabId: session.activeTabId,
     currentQuestion: session.currentQuestion,
     answers: Object.fromEntries(session.answers),
+    reviewStatus: session.reviewStatus ? Array.from(session.reviewStatus) : [],
     state: session.state,
     score: session.score,
     connected: isLive(session),
@@ -160,6 +161,7 @@ async function route(req, res) {
         activeTabId: body.tabId || id(),
         currentQuestion: 0,
         answers: new Map(),
+        reviewStatus: new Set(),
         score: null,
           state: 'waiting',
         lastHeartbeat: now(),
@@ -213,14 +215,29 @@ async function route(req, res) {
       refreshCompetition();
       if (competition.state !== 'running' || session.state !== 'quiz') return send(res, 409, { error: 'The quiz is not accepting answers.' });
       const question = questionBank.find(item => item.id === Number(body.questionId));
-      if (!question || !Number.isInteger(body.optionIndex) || body.optionIndex < 0 || body.optionIndex >= question.options.length) return send(res, 400, { error: 'Invalid answer.' });
-      if (session.answers.has(question.id)) return send(res, 409, { error: 'Duplicate submission.' });
-      session.answers.set(question.id, body.optionIndex);
-      session.currentQuestion = Math.min(question.id, questionBank.length);
-      if (session.answers.size === questionBank.length) {
-        session.state = 'submitted';
-        session.score = scoreSession(session);
+      if (!question) return send(res, 400, { error: 'Invalid question.' });
+      
+      if (!session.reviewStatus) session.reviewStatus = new Set();
+      
+      if (body.action === 'clear') {
+        session.answers.delete(question.id);
+        session.reviewStatus.delete(question.id);
+      } else {
+        if (body.optionIndex !== undefined && body.optionIndex !== null) {
+          if (!Number.isInteger(body.optionIndex) || body.optionIndex < 0 || body.optionIndex >= question.options.length) return send(res, 400, { error: 'Invalid answer.' });
+          session.answers.set(question.id, body.optionIndex);
+        }
+        if (body.action === 'mark_review') {
+          session.reviewStatus.add(question.id);
+        } else if (body.action === 'save') {
+          session.reviewStatus.delete(question.id);
+        }
       }
+      
+      if (body.nextQuestionIndex !== undefined) {
+        session.currentQuestion = body.nextQuestionIndex;
+      }
+
       return send(res, 200, publicSession(session));
     }
 

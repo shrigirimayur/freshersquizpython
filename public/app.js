@@ -10,6 +10,8 @@ let waitingRefreshTimer;
 let violationCount = 0;
 let warningVisible = false;
 const MAX_VIOLATIONS = 5;
+let currentSelectionIndex = null;
+let currentQuestionId = null;
 
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
 const post = async (url, payload) => {
@@ -184,19 +186,68 @@ function renderQuestion() {
   const currentIndex = Math.min(Math.max(Number(session.currentQuestion) || 0, 0), list.length - 1);
   const question = list[currentIndex] || list.find(item => !session.answers[item.id]);
   if (!question) return renderComplete();
-  const answered = session.answers[question.id];
-  const map = list.map((item, index) => `<button class="question-map-item ${index === currentIndex ? 'current' : ''} ${session.answers[item.id] !== undefined ? 'answered' : ''}" data-question-index="${index}" title="Question ${index + 1}">${index + 1}</button>`).join('');
-  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2,'0')} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><h2>${escapeHtml(question.prompt)}</h2><div id="options">${question.options.map((option, index) => `<button class="option ${answered === index ? 'selected':''}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join('')}</div><div id="answer-status" class="notice" hidden></div><div class="question-actions"><button class="btn secondary" id="previous-question" ${currentIndex === 0 ? 'disabled' : ''}>PREVIOUS</button><button class="btn secondary" id="submit-test">SUBMIT TEST</button><button class="btn" id="next-question">${currentIndex === list.length - 1 ? 'REVIEW ANSWERS' : 'SAVE & NEXT'}</button></div></section><aside class="question-map panel"><div class="eyebrow">Question paper</div><h3>Question map</h3><p class="muted">Green = answered. Dark = current.</p><div class="map-grid">${map}</div><div class="map-legend"><span><i class="legend-dot answered-dot"></i> Answered</span><span><i class="legend-dot current-dot"></i> Current</span></div><div class="map-summary"><strong>${Object.keys(session.answers).length}</strong> answered of ${list.length}</div></aside></div>`);
-  document.querySelectorAll('.option').forEach(button => button.onclick = () => submitAnswer(question, Number(button.dataset.index)));
-  document.querySelectorAll('[data-question-index]').forEach(button => button.onclick = () => { session.currentQuestion = Number(button.dataset.questionIndex); renderQuestion(); });
+  
+  if (currentQuestionId !== question.id) {
+    currentQuestionId = question.id;
+    currentSelectionIndex = session.answers[question.id] !== undefined ? session.answers[question.id] : null;
+  }
+  
+  if (!session.visited) session.visited = [];
+  if (!session.visited.includes(question.id)) session.visited.push(question.id);
+
+  const map = list.map((item, index) => {
+    const isCurrent = index === currentIndex;
+    const isAnswered = session.answers[item.id] !== undefined;
+    const isReview = session.reviewStatus?.includes(item.id);
+    let stateClass = '';
+    if (isReview && isAnswered) stateClass = 'review-answered';
+    else if (isReview) stateClass = 'review';
+    else if (isAnswered) stateClass = 'answered';
+    else if (session.visited.includes(item.id)) stateClass = 'not-answered';
+    return `<button class="question-map-item ${isCurrent ? 'current' : ''} ${stateClass}" data-question-index="${index}" title="Question ${index + 1}">${index + 1}</button>`;
+  }).join('');
+  
+  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2,'0')} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><h2>${escapeHtml(question.prompt)}</h2><div id="options">${question.options.map((option, index) => `<button class="option ${currentSelectionIndex === index ? 'selected':''}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join('')}</div><div id="answer-status" class="notice" hidden></div><div class="question-actions" style="margin-bottom:12px"><button class="btn secondary" id="previous-question" ${currentIndex === 0 ? 'disabled' : ''}>PREVIOUS</button><button class="btn secondary" id="next-question" ${currentIndex === list.length - 1 ? 'disabled' : ''}>NEXT</button></div><div class="question-actions"><button class="btn secondary" id="clear-response">CLEAR</button><button class="btn secondary" id="mark-review">REVIEW & NEXT</button><button class="btn secondary" id="save-review">SAVE & REVIEW</button><button class="btn" id="save-next">SAVE & NEXT</button><button class="btn secondary" id="submit-test" style="margin-left:auto;">SUBMIT</button></div></section><aside class="question-map panel"><div class="eyebrow">Question paper</div><h3>Question map</h3><div class="map-grid">${map}</div><div class="map-legend"><span><i class="legend-dot answered-dot"></i> Answered</span><span><i class="legend-dot not-answered-dot"></i> Not Answered</span><span><i class="legend-dot review-dot"></i> Review</span><span><i class="legend-dot review-answered-dot"></i> Ans & Review</span></div><div class="map-summary"><strong>${Object.keys(session.answers).length}</strong> answered of ${list.length}</div></aside></div>`);
+  
+  document.querySelectorAll('.option').forEach(button => button.onclick = () => {
+    currentSelectionIndex = Number(button.dataset.index);
+    renderQuestion();
+  });
+  
+  document.querySelectorAll('[data-question-index]').forEach(button => button.onclick = () => { 
+    session.currentQuestion = Number(button.dataset.questionIndex); 
+    renderQuestion(); 
+  });
+  
   document.querySelector('#previous-question').onclick = () => { session.currentQuestion = currentIndex - 1; renderQuestion(); };
+  document.querySelector('#next-question').onclick = () => { session.currentQuestion = currentIndex + 1; renderQuestion(); };
+  
+  const nextIndex = Math.min(currentIndex + 1, list.length - 1);
+  
+  document.querySelector('#clear-response').onclick = () => {
+    currentSelectionIndex = null;
+    submitAnswer(question, { action: 'clear', nextQuestionIndex: currentIndex });
+  };
+  
+  document.querySelector('#mark-review').onclick = () => submitAnswer(question, { action: 'mark_review', optionIndex: null, nextQuestionIndex: nextIndex });
+  
+  document.querySelector('#save-review').onclick = () => {
+    if (currentSelectionIndex === null) return alert('Please select an option first.');
+    submitAnswer(question, { action: 'mark_review', optionIndex: currentSelectionIndex, nextQuestionIndex: nextIndex });
+  };
+  
+  document.querySelector('#save-next').onclick = () => {
+    if (currentSelectionIndex === null) return alert('Please select an option first.');
+    submitAnswer(question, { action: 'save', optionIndex: currentSelectionIndex, nextQuestionIndex: nextIndex });
+  };
+  
   document.querySelector('#submit-test').onclick = () => { if (confirm('Submit your test now? You will not be able to change your answers.')) submitCurrentAttempt(); };
-  document.querySelector('#next-question').onclick = () => { if (currentIndex === list.length - 1 && Object.keys(session.answers).length === list.length) return renderComplete(); session.currentQuestion = Math.min(currentIndex + 1, list.length - 1); renderQuestion(); };
 }
 
-async function submitAnswer(question, optionIndex) {
+async function submitAnswer(question, payload) {
   try {
-    session = await post('/api/session/answer', { participantId: session.participantId, sessionId: session.sessionId, tabId, questionId: question.id, optionIndex });
+    session = await post('/api/session/answer', { participantId: session.participantId, sessionId: session.sessionId, tabId, questionId: question.id, ...payload });
+    currentQuestionId = null;
     renderParticipant();
   } catch (error) {
     const status = document.querySelector('#answer-status');
