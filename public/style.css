@@ -108,9 +108,14 @@ h3 {
 .panel {
   background: var(--white);
   border: 1px solid var(--line);
-  padding: 25px;
-  box-shadow: 5px 5px 0 #dfe6d7;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(20, 37, 31, 0.05), 0 1px 3px rgba(20, 37, 31, 0.02);
   min-width: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.panel:hover {
+  box-shadow: 0 15px 35px rgba(20, 37, 31, 0.08), 0 3px 6px rgba(20, 37, 31, 0.03);
 }
 .panel.lime {
   background: var(--lime);
@@ -136,25 +141,33 @@ input,
 textarea {
   width: 100%;
   min-width: 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 2px solid var(--ink);
-  padding: 9px 0;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px 14px;
   outline: 0;
   resize: vertical;
+  transition: all 0.2s ease;
+}
+input:focus,
+textarea:focus {
+  background: #fff;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255, 116, 77, 0.15);
 }
 .btn {
-  padding: 13px 17px;
+  padding: 14px 22px;
   background: var(--ink);
   color: var(--white);
   font-weight: 600;
-  transition:
-    transform 0.15s,
-    background 0.15s;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px rgba(20, 37, 31, 0.15);
 }
 .btn:hover {
   transform: translateY(-2px);
-  background: #304b40;
+  background: #254035;
+  box-shadow: 0 6px 15px rgba(20, 37, 31, 0.25);
 }
 .btn.secondary {
   background: transparent;
@@ -427,8 +440,12 @@ textarea {
 th,
 td {
   text-align: left;
-  padding: 14px 8px;
+  padding: 16px 12px;
   border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+tbody tr:hover td {
+  background: #fdfdf9;
 }
 th {
   font:
