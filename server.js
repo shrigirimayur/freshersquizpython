@@ -38,6 +38,49 @@ const roster = [];
 const questionBank = JSON.parse(fs.readFileSync(path.join(__dirname, 'data', 'python-questions.json'), 'utf8'));
 let competition = { state: 'waiting', fullscreen: false, fullscreenExitMode: 'warning', selectedParticipantIds: [], durationMinutes: 30, startedAt: null, endsAt: null, revealDurationMinutes: 10, revealEndsAt: null };
 
+const stateFile = path.join(__dirname, 'data', 'state.json');
+
+function saveState() {
+  try {
+    const data = {
+      competition,
+      roster,
+      sessions: Array.from(sessions.entries()).map(([k, v]) => [k, {
+        ...v,
+        answers: Object.fromEntries(v.answers),
+        reviewStatus: Array.from(v.reviewStatus || [])
+      }]),
+      questionBank
+    };
+    fs.writeFileSync(stateFile, JSON.stringify(data));
+  } catch (err) {
+    console.error('Failed to save state:', err);
+  }
+}
+
+function loadState() {
+  try {
+    if (fs.existsSync(stateFile)) {
+      const data = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+      if (data.competition) competition = data.competition;
+      if (data.roster) { roster.length = 0; roster.push(...data.roster); }
+      if (data.questionBank) { questionBank.length = 0; questionBank.push(...data.questionBank); }
+      if (data.sessions) {
+        sessions.clear();
+        for (const [k, v] of data.sessions) {
+          v.answers = new Map(Object.entries(v.answers || {}));
+          v.reviewStatus = new Set(v.reviewStatus || []);
+          sessions.set(k, v);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load state:', err);
+  }
+}
+
+loadState();
+
 function id() { return crypto.randomUUID(); }
 function now() { return Date.now(); }
 function normalizeName(name) { return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase(); }
@@ -110,11 +153,19 @@ function refreshCompetition() {
   if (competition.state === 'running' && competition.endsAt && now() >= competition.endsAt) {
     competition = { ...competition, state: 'stopped' };
     for (const session of sessions.values()) if (session.state === 'quiz') finalizeSession(session);
+    saveState();
   }
   return competition;
 }
 function cleanup() {
-  for (const [key, session] of sessions) if (now() - session.lastHeartbeat > SESSION_TTL_MS) sessions.delete(key);
+  let changed = false;
+  for (const [key, session] of sessions) {
+    if (now() - session.lastHeartbeat > SESSION_TTL_MS) {
+      sessions.delete(key);
+      changed = true;
+    }
+  }
+  if (changed) saveState();
 }
 setInterval(cleanup, 10_000).unref();
 
@@ -169,6 +220,7 @@ async function route(req, res) {
         multipleTabAt: null
       };
       sessions.set(session.sessionId, session);
+      saveState();
       return send(res, 201, publicSession(session));
     }
 
@@ -177,6 +229,7 @@ async function route(req, res) {
       if (!session || session.participantId !== body.participantId || session.state === 'ended') return send(res, 404, { error: 'Session not found.' });
       if (isLive(session) && session.activeTabId !== body.tabId) return send(res, 409, { code: 'MULTIPLE_TAB', message: 'Another quiz tab is already active.' });
       session.activeTabId = body.tabId; session.lastHeartbeat = now();
+      saveState();
       return send(res, 200, publicSession(session));
     }
 
@@ -197,6 +250,7 @@ async function route(req, res) {
       if (!validIdentity(session, body)) return send(res, 403, { error: 'Unauthorized quiz tab.' });
       if (body.type === 'MULTIPLE_TAB') { session.multipleTabDetected = true; session.multipleTabAt = now(); }
       if (body.type === 'FULLSCREEN_VIOLATION' || body.type === 'NAVIGATION_VIOLATION') session.violationCount = Math.max(session.violationCount || 0, Number(body.count) || 0);
+      saveState();
       return send(res, 200, { recorded: true });
     }
 
@@ -206,6 +260,7 @@ async function route(req, res) {
       if (session.state === 'submitted') return send(res, 409, { error: 'Quiz already submitted.' });
       session.state = 'submitted';
       session.score = scoreSession(session);
+      saveState();
       return send(res, 200, publicSession(session));
     }
 
@@ -237,7 +292,7 @@ async function route(req, res) {
       if (body.nextQuestionIndex !== undefined) {
         session.currentQuestion = body.nextQuestionIndex;
       }
-
+      saveState();
       return send(res, 200, publicSession(session));
     }
 
@@ -255,6 +310,7 @@ async function route(req, res) {
           session.state = 'quiz';
         }
       }
+      saveState();
       return send(res, 200, { competition });
     }
 
@@ -263,6 +319,7 @@ async function route(req, res) {
       for (const session of sessions.values()) {
         finalizeSession(session);
       }
+      saveState();
       return send(res, 200, { competition });
     }
 
@@ -272,18 +329,21 @@ async function route(req, res) {
       session.state = 'ended';
       sessions.delete(body.sessionId);
       competition.selectedParticipantIds = competition.selectedParticipantIds.filter(name => name !== session.participantName);
+      saveState();
       return send(res, 200, { deleted: true, participantName: session.participantName });
     }
 
     if (url.pathname === '/api/organizer/reveal-results') {
       const minutes = Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10));
       competition = { ...competition, state: 'results', revealDurationMinutes: minutes, revealEndsAt: now() + minutes * 60 * 1000 };
+      saveState();
       return send(res, 200, { competition });
     }
 
     if (url.pathname === '/api/organizer/reveal-answers') {
       const minutes = Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10));
       competition = { ...competition, state: 'answers', revealDurationMinutes: minutes, revealEndsAt: now() + minutes * 60 * 1000 };
+      saveState();
       return send(res, 200, { competition });
     }
 
@@ -296,6 +356,7 @@ async function route(req, res) {
         revealDurationMinutes: Math.max(1, Math.min(180, Number(body.revealDurationMinutes) || competition.revealDurationMinutes || 10)),
         selectedParticipantIds: Array.from(new Set(body.selectedParticipantIds || competition.selectedParticipantIds || []))
       };
+      saveState();
       return send(res, 200, { competition });
     }
 
@@ -306,6 +367,7 @@ async function route(req, res) {
       if (Array.isArray(body.selectedParticipantIds)) {
         competition.selectedParticipantIds = body.selectedParticipantIds.map(name => String(name).trim()).filter(Boolean);
       }
+      saveState();
       return send(res, 200, { roster: [...roster], competition });
     }
 
@@ -316,6 +378,7 @@ async function route(req, res) {
       }
       const nextId = questionBank.length ? Math.max(...questionBank.map(q => q.id)) + 1 : 1;
       questionBank.push({ id: nextId, prompt: item.prompt, options: item.options, correct: Number(item.correct), explanation: item.explanation || 'Answer explanation not provided.' });
+      saveState();
       return send(res, 201, { questions: organizerQuestions() });
     }
 
@@ -327,6 +390,7 @@ async function route(req, res) {
         return send(res, 400, { error: 'Question payload is invalid.' });
       }
       questionBank[index] = { ...questionBank[index], prompt: item.prompt, options: item.options, correct: item.correct, explanation: item.explanation || 'Answer explanation not provided.' };
+      saveState();
       return send(res, 200, { questions: organizerQuestions() });
     }
 
@@ -335,6 +399,7 @@ async function route(req, res) {
       if (index < 0) return send(res, 404, { error: 'Question not found.' });
       if (questionBank.length <= 1) return send(res, 400, { error: 'Keep at least one question in the question bank.' });
       questionBank.splice(index, 1);
+      saveState();
       return send(res, 200, { deleted: true, questionId: Number(body.questionId), questions: organizerQuestions() });
     }
   }

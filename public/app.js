@@ -82,8 +82,14 @@ function startHeartbeat() {
     try {
       await post('/api/session/heartbeat', { participantId: session.participantId, sessionId: session.sessionId, tabId });
       setConnection(true);
-    } catch {
+    } catch (err) {
       setConnection(false);
+      if (err.message && (err.message.includes('403') || err.message.includes('404') || err.message.includes('Unauthorized') || err.message.includes('not found'))) {
+        clearInterval(heartbeatTimer);
+        alert("The server has restarted or your session has expired. You need to rejoin.");
+        localStorage.removeItem('codeBattleSession');
+        window.location.reload();
+      }
     }
   }, 4000);
 }
