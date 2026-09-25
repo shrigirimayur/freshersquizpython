@@ -327,7 +327,6 @@ function renderQuestion() {
   <div class="nta-action-row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line);">
     <button class="btn btn-nta-green" id="save-next">SAVE & NEXT</button>
     <button class="btn btn-nta-blue" id="save-review">SAVE & REVIEW</button>
-    <button class="btn btn-nta-purple" id="mark-review">REVIEW & NEXT</button>
     <button class="btn secondary" id="clear-response">CLEAR</button>
   </div>
   
@@ -374,13 +373,6 @@ function renderQuestion() {
       nextQuestionIndex: currentIndex,
     });
   };
-
-  document.querySelector("#mark-review").onclick = () =>
-    submitAnswer(question, {
-      action: "mark_review",
-      optionIndex: null,
-      nextQuestionIndex: nextIndex,
-    });
 
   document.querySelector("#save-review").onclick = () => {
     if (currentSelectionIndex === null)
