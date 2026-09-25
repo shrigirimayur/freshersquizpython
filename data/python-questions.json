@@ -1,22 +1,254 @@
 [
-  {"id":1,"prompt":"A student is given the following Python code:\n\nname = \"Student\"\nage = 20\n\nWhich statement correctly describes the variables name and age?","options":["Both variables store integer values.","name stores a string and age stores an integer.","name stores a character and age stores a string.","Python does not allow different data types to be stored in variables."],"correct":1,"explanation":"name stores a string and age stores an integer."},
-  {"id":2,"prompt":"Consider the following Python program:\n\nx = 8\ny = 3\n\nresult = x + y * 2\n\nprint(result)\n\nWhat will be the output?","options":["22","14","19","16"],"correct":1,"explanation":"Multiplication happens before addition: 8 + (3 * 2) = 14."},
-  {"id":3,"prompt":"A student wants to store several values in a collection where the values can be changed later. Which Python data type is most appropriate?","options":["Tuple","String","List","Integer"],"correct":2,"explanation":"Lists are mutable collections."},
-  {"id":4,"prompt":"Consider the code:\n\nnumber = 29\nremainder = number % 6\nprint(remainder)\n\nWhat will be printed?","options":["4","5","6","23"],"correct":1,"explanation":"29 divided by 6 leaves a remainder of 5."},
-  {"id":5,"prompt":"A student writes:\n\nmarks = 50\nif marks = 50:\n    print(\"Passed\")\n\nWhich change correctly fixes the syntax error?","options":["Replace = with ==","Replace = with !=","Replace if with while","Replace print() with return"],"correct":0,"explanation":"== compares values; = assigns values."},
-  {"id":6,"prompt":"Consider:\n\na = 17\nb = 5\nprint(a // b)\nprint(a / b)\n\nWhat is the output?","options":["3\n3","3\n3.4","3.4\n3","4\n3.4"],"correct":1,"explanation":"// performs floor division and / performs true division."},
-  {"id":7,"prompt":"For numbers = [12, 5, 8, 21, 3, 10], which statement returns the number of elements?","options":["numbers.size()","length(numbers)","len(numbers)","numbers.length()"],"correct":2,"explanation":"len(numbers) returns the number of elements."},
-  {"id":8,"prompt":"Consider:\n\nage = 20\nhas_id = True\n\nif age >= 18 and has_id:\n    print(\"Entry Allowed\")\nelse:\n    print(\"Entry Denied\")\n\nWhat will the program print?","options":["Entry Denied","Entry Allowed","True","False"],"correct":1,"explanation":"Both conditions are true."},
-  {"id":9,"prompt":"Which is the correct way to define a reusable function that accepts two numbers and returns their sum?","options":["function add(a, b):\n    return a + b","def add(a, b):\n    return a + b","create add(a, b):\n    return a + b","func add(a, b):\n    return a + b"],"correct":1,"explanation":"Python functions are defined with def."},
-  {"id":10,"prompt":"Consider:\n\ntotal = 0\nfor i in range(1, 6):\n    total = total + i\nprint(total)\n\nWhat will be printed?","options":["10","12","15","20"],"correct":2,"explanation":"The sum 1 + 2 + 3 + 4 + 5 is 15."},
-  {"id":11,"prompt":"Consider:\n\nnumbers = [10, 20, 30, 40, 50]\nprint(numbers[1] + numbers[-1])\n\nWhat is the output?","options":["60","70","80","90"],"correct":1,"explanation":"numbers[1] is 20 and numbers[-1] is 50, so the result is 70."},
-  {"id":12,"prompt":"Consider:\n\nx = 12\nif x % 2 == 0:\n    if x > 10:\n        print(\"A\")\n    else:\n        print(\"B\")\nelse:\n    print(\"C\")\n\nWhat will be printed?","options":["A","B","C","Nothing"],"correct":0,"explanation":"12 is even and greater than 10."},
-  {"id":13,"prompt":"Consider:\n\ntotal = 0\nfor i in range(2, 10, 2):\n    total += i\nprint(total)\n\nWhat will be printed?","options":["18","20","24","30"],"correct":1,"explanation":"The values are 2, 4, 6, and 8; their sum is 20."},
-  {"id":14,"prompt":"Consider:\n\nnumbers = [5, 10, 15, 20]\nnumbers[1] = numbers[1] + 5\nnumbers.append(25)\nprint(numbers)\n\nWhat is the final list?","options":["[5, 10, 15, 20, 25]","[5, 15, 15, 20, 25]","[10, 15, 20, 25]","[5, 15, 20, 25]"],"correct":1,"explanation":"The second item becomes 15, then 25 is appended."},
-  {"id":15,"prompt":"Consider:\n\nnumbers = [2, 4, 6, 8]\ntotal = 0\nfor i in range(len(numbers)):\n    if numbers[i] > 4:\n        total += numbers[i]\n    else:\n        total -= numbers[i]\nprint(total)\n\nWhat will be printed?","options":["4","6","8","10"],"correct":2,"explanation":"-2 - 4 + 6 + 8 = 8."},
-  {"id":16,"prompt":"Consider:\n\ncount = 0\nfor i in range(1, 4):\n    for j in range(1, i + 1):\n        count += 1\nprint(count)\n\nHow many times is count += 1 executed?","options":["3","4","5","6"],"correct":3,"explanation":"The nested loop executes 1 + 2 + 3 = 6 times."},
-  {"id":17,"prompt":"A programmer has the dictionary:\n\nstudent = {\n    \"name\": \"Rahul\",\n    \"age\": 20,\n    \"marks\": 85\n}\n\nWhich statement retrieves the student's marks?","options":["student.marks","student[\"marks\"]","student(marks)","student[2]"],"correct":1,"explanation":"Dictionary values are retrieved by key using brackets."},
-  {"id":18,"prompt":"Consider:\n\nn = 123\ntotal = 0\nwhile n > 0:\n    digit = n % 10\n    total += digit\n    n = n // 10\nprint(total)\n\nWhat will be printed?","options":["3","5","6","123"],"correct":2,"explanation":"1 + 2 + 3 = 6."},
-  {"id":19,"prompt":"Consider:\n\nx = 0\nfor i in range(1, 5):\n    if i % 2 == 0:\n        x += i * 2\n    else:\n        x += i\nprint(x)\n\nWhat is the final value of x?","options":["10","12","14","16"],"correct":3,"explanation":"1 + 4 + 3 + 8 = 16. The correct choice is D."},
-  {"id":20,"prompt":"Carefully trace:\n\nx = 3\nfor i in range(1, 6):\n    x += i\n    if x % 2 == 0:\n        x //= 2\nprint(x)\n\nWhat will be printed?","options":["5","6","7","8"],"correct":2,"explanation":"The final value is 7. The supplied answer label said B, but tracing the code gives C (7)."}
+  {
+    "id": 1,
+    "prompt": "A student is given the following Python code:\n\nname = \"Student\"\nage = 20\n\nWhich statement correctly describes the variables name and age?",
+    "options": [
+      "Both variables store integer values.",
+      "name stores a string and age stores an integer.",
+      "name stores a character and age stores a string.",
+      "Python does not allow different data types to be stored in variables."
+    ],
+    "correct": 1,
+    "explanation": "name stores a string and age stores an integer."
+  },
+  {
+    "id": 2,
+    "prompt": "Consider the following Python program:\n\nx = 8\ny = 3\n\nresult = x + y * 2\n\nprint(result)\n\nWhat will be the output?",
+    "options": [
+      "22",
+      "14",
+      "19",
+      "16"
+    ],
+    "correct": 1,
+    "explanation": "Multiplication happens before addition: 8 + (3 * 2) = 14."
+  },
+  {
+    "id": 3,
+    "prompt": "A student wants to store several values in a collection where the values can be changed later. Which Python data type is most appropriate?",
+    "options": [
+      "Tuple",
+      "String",
+      "List",
+      "Integer"
+    ],
+    "correct": 2,
+    "explanation": "Lists are mutable collections."
+  },
+  {
+    "id": 4,
+    "prompt": "Consider the code:\n\nnumber = 29\nremainder = number % 6\nprint(remainder)\n\nWhat will be printed?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "23"
+    ],
+    "correct": 1,
+    "explanation": "29 divided by 6 leaves a remainder of 5."
+  },
+  {
+    "id": 5,
+    "prompt": "A student writes:\n\nmarks = 50\nif marks = 50:\n    print(\"Passed\")\n\nWhich change correctly fixes the syntax error?",
+    "options": [
+      "Replace = with ==",
+      "Replace = with !=",
+      "Replace if with while",
+      "Replace print() with return"
+    ],
+    "correct": 0,
+    "explanation": "== compares values; = assigns values."
+  },
+  {
+    "id": 6,
+    "prompt": "Consider:\n\na = 17\nb = 5\nprint(a // b)\nprint(a / b)\n\nWhat is the output?",
+    "options": [
+      "3\n3",
+      "3\n3.4",
+      "3.4\n3",
+      "4\n3.4"
+    ],
+    "correct": 1,
+    "explanation": "// performs floor division and / performs true division."
+  },
+  {
+    "id": 7,
+    "prompt": "For numbers = [12, 5, 8, 21, 3, 10], which statement returns the number of elements?",
+    "options": [
+      "numbers.size()",
+      "length(numbers)",
+      "len(numbers)",
+      "numbers.length()"
+    ],
+    "correct": 2,
+    "explanation": "len(numbers) returns the number of elements."
+  },
+  {
+    "id": 8,
+    "prompt": "Consider:\n\nage = 20\nhas_id = True\n\nif age >= 18 and has_id:\n    print(\"Entry Allowed\")\nelse:\n    print(\"Entry Denied\")\n\nWhat will the program print?",
+    "options": [
+      "Entry Denied",
+      "Entry Allowed",
+      "True",
+      "False"
+    ],
+    "correct": 1,
+    "explanation": "Both conditions are true."
+  },
+  {
+    "id": 9,
+    "prompt": "Which is the correct way to define a reusable function that accepts two numbers and returns their sum?",
+    "options": [
+      "function add(a, b):\n    return a + b",
+      "def add(a, b):\n    return a + b",
+      "create add(a, b):\n    return a + b",
+      "func add(a, b):\n    return a + b"
+    ],
+    "correct": 1,
+    "explanation": "Python functions are defined with def."
+  },
+  {
+    "id": 10,
+    "prompt": "Consider:\n\ntotal = 0\nfor i in range(1, 6):\n    total = total + i\nprint(total)\n\nWhat will be printed?",
+    "options": [
+      "10",
+      "12",
+      "15",
+      "20"
+    ],
+    "correct": 2,
+    "explanation": "The sum 1 + 2 + 3 + 4 + 5 is 15."
+  },
+  {
+    "id": 11,
+    "prompt": "Consider:\n\nnumbers = [10, 20, 30, 40, 50]\nprint(numbers[1] + numbers[-1])\n\nWhat is the output?",
+    "options": [
+      "60",
+      "70",
+      "80",
+      "90"
+    ],
+    "correct": 1,
+    "explanation": "numbers[1] is 20 and numbers[-1] is 50, so the result is 70."
+  },
+  {
+    "id": 12,
+    "prompt": "Consider:\n\nx = 12\nif x % 2 == 0:\n    if x > 10:\n        print(\"A\")\n    else:\n        print(\"B\")\nelse:\n    print(\"C\")\n\nWhat will be printed?",
+    "options": [
+      "A",
+      "B",
+      "C",
+      "Nothing"
+    ],
+    "correct": 0,
+    "explanation": "12 is even and greater than 10."
+  },
+  {
+    "id": 13,
+    "prompt": "Consider:\n\ntotal = 0\nfor i in range(2, 10, 2):\n    total += i\nprint(total)\n\nWhat will be printed?",
+    "options": [
+      "18",
+      "20",
+      "24",
+      "30"
+    ],
+    "correct": 1,
+    "explanation": "The values are 2, 4, 6, and 8; their sum is 20."
+  },
+  {
+    "id": 14,
+    "prompt": "Consider:\n\nnumbers = [5, 10, 15, 20]\nnumbers[1] = numbers[1] + 5\nnumbers.append(25)\nprint(numbers)\n\nWhat is the final list?",
+    "options": [
+      "[5, 10, 15, 20, 25]",
+      "[5, 15, 15, 20, 25]",
+      "[10, 15, 20, 25]",
+      "[5, 15, 20, 25]"
+    ],
+    "correct": 1,
+    "explanation": "The second item becomes 15, then 25 is appended."
+  },
+  {
+    "id": 15,
+    "prompt": "Consider:\n\nnumbers = [2, 4, 6, 8]\ntotal = 0\nfor i in range(len(numbers)):\n    if numbers[i] > 4:\n        total += numbers[i]\n    else:\n        total -= numbers[i]\nprint(total)\n\nWhat will be printed?",
+    "options": [
+      "4",
+      "6",
+      "8",
+      "10"
+    ],
+    "correct": 2,
+    "explanation": "-2 - 4 + 6 + 8 = 8."
+  },
+  {
+    "id": 16,
+    "prompt": "Consider:\n\ncount = 0\nfor i in range(1, 4):\n    for j in range(1, i + 1):\n        count += 1\nprint(count)\n\nHow many times is count += 1 executed?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correct": 3,
+    "explanation": "The nested loop executes 1 + 2 + 3 = 6 times."
+  },
+  {
+    "id": 17,
+    "prompt": "A programmer has the dictionary:\n\nstudent = {\n    \"name\": \"Rahul\",\n    \"age\": 20,\n    \"marks\": 85\n}\n\nWhich statement retrieves the student's marks?",
+    "options": [
+      "student.marks",
+      "student[\"marks\"]",
+      "student(marks)",
+      "student[2]"
+    ],
+    "correct": 1,
+    "explanation": "Dictionary values are retrieved by key using brackets."
+  },
+  {
+    "id": 18,
+    "prompt": "Consider:\n\nn = 123\ntotal = 0\nwhile n > 0:\n    digit = n % 10\n    total += digit\n    n = n // 10\nprint(total)\n\nWhat will be printed?",
+    "options": [
+      "3",
+      "5",
+      "6",
+      "123"
+    ],
+    "correct": 2,
+    "explanation": "1 + 2 + 3 = 6."
+  },
+  {
+    "id": 19,
+    "prompt": "Consider:\n\nx = 0\nfor i in range(1, 5):\n    if i % 2 == 0:\n        x += i * 2\n    else:\n        x += i\nprint(x)\n\nWhat is the final value of x?",
+    "options": [
+      "10",
+      "12",
+      "14",
+      "16"
+    ],
+    "correct": 3,
+    "explanation": "1 + 4 + 3 + 8 = 16. The correct choice is D."
+  },
+  {
+    "id": 20,
+    "prompt": "Carefully trace:\n\nx = 3\nfor i in range(1, 6):\n    x += i\n    if x % 2 == 0:\n        x //= 2\nprint(x)\n\nWhat will be printed?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correct": 2,
+    "explanation": "The final value is 7. The supplied answer label said B, but tracing the code gives C (7)."
+  },
+  {
+    "id": 21,
+    "prompt": "Consider the following Python code:\n\ndef greet(name):\n    print(\"Hello, \" + name)\n\ngreet(\"Alice\")\n\nWhat will this code output?",
+    "options": [
+      "Hello, name",
+      "Hello, Alice",
+      "greet(\"Alice\")",
+      "An error will occur"
+    ],
+    "correct": 1,
+    "explanation": "The function substitutes the variable 'name' with 'Alice' and prints it."
+  }
 ]
