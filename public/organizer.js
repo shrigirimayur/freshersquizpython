@@ -67,7 +67,10 @@ function monitorRows(sessions) {
 function leaderboardRows(sessions) {
   const completed = sessions
     .filter((item) => item.score !== null && item.score !== undefined)
-    .sort((left, right) => right.score - left.score);
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      return (left.submittedAt || 0) - (right.submittedAt || 0);
+    });
   return completed.length
     ? completed
         .map(

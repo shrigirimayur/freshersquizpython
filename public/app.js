@@ -15,6 +15,7 @@ let warningVisible = false;
 const MAX_VIOLATIONS = 5;
 let currentSelectionIndex = null;
 let currentQuestionId = null;
+let serverTimeOffset = 0;
 
 const escapeHtml = (value) =>
   String(value).replace(
@@ -169,6 +170,7 @@ function setConnection(connected) {
 async function renderParticipant() {
   clearInterval(waitingRefreshTimer);
   const state = await post("/api/session/state", session);
+  serverTimeOffset = state.serverTime ? state.serverTime - Date.now() : 0;
   competition = state.competition;
   session = state.session;
   if (!session) return renderHome();
@@ -192,7 +194,7 @@ function startExamClock() {
   clearInterval(examTimer);
   const update = () => {
     const remaining = competition?.endsAt
-      ? Math.max(0, competition.endsAt - Date.now())
+      ? Math.max(0, competition.endsAt - (Date.now() + serverTimeOffset))
       : null;
     const label = document.querySelector("#exam-clock");
     if (label)

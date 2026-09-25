@@ -309,6 +309,7 @@ function publicSession(session) {
     reviewStatus: session.reviewStatus ? Array.from(session.reviewStatus) : [],
     state: session.state,
     score: session.score,
+    submittedAt: session.submittedAt || null,
     connected: isLive(session),
     tabStatus: session.multipleTabDetected
       ? "MULTIPLE TAB DETECTED"
@@ -374,6 +375,7 @@ function finalizeSession(session) {
   if (session.state !== "submitted") {
     session.state = "submitted";
     session.score = scoreSession(session);
+    session.submittedAt = now();
   }
 }
 function isOrganizer(req, body) {
@@ -414,9 +416,10 @@ async function route(req, res) {
   refreshCompetition();
   if (req.method === "GET" && url.pathname === "/api/state") {
     if (!organizerHeaderIsValid(req)) {
-      return send(res, 200, { competition, questions: publicQuestions() });
+      return send(res, 200, { serverTime: now(), competition, questions: publicQuestions() });
     }
     return send(res, 200, {
+      serverTime: now(),
       competition,
       roster: [...roster],
       questions: organizerQuestions(),
@@ -526,7 +529,7 @@ async function route(req, res) {
         return send(res, 403, {
           error: "Unauthorized or expired quiz session.",
         });
-      return send(res, 200, { competition, session: publicSession(session) });
+      return send(res, 200, { serverTime: now(), competition, session: publicSession(session) });
     }
 
     if (url.pathname === "/api/session/event") {
@@ -557,6 +560,7 @@ async function route(req, res) {
         return send(res, 409, { error: "Quiz already submitted." });
       session.state = "submitted";
       session.score = scoreSession(session);
+      session.submittedAt = now();
       saveState();
       return send(res, 200, publicSession(session));
     }
