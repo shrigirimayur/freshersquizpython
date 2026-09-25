@@ -208,18 +208,20 @@ function renderQuestion() {
   }).join('');
   
   base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2,'0')} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><h2>${escapeHtml(question.prompt)}</h2><div id="options">${question.options.map((option, index) => `<button class="option ${currentSelectionIndex === index ? 'selected':''}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join('')}</div><div id="answer-status" class="notice" hidden></div>
-  <div class="nta-action-row" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 30px; padding-top: 25px; border-top: 1px solid var(--line);">
-    <button class="btn" id="save-next" style="background: #28a745; color: #fff; border: 1px solid #28a745;">SAVE & NEXT</button>
+  
+  <div class="nta-action-row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line);">
+    <button class="btn btn-nta-green" id="save-next">SAVE & NEXT</button>
+    <button class="btn btn-nta-orange" id="save-review">SAVE & REVIEW</button>
+    <button class="btn btn-nta-purple" id="mark-review">REVIEW & NEXT</button>
     <button class="btn secondary" id="clear-response">CLEAR</button>
-    <button class="btn" id="save-review" style="background: #fd7e14; color: #fff; border: 1px solid #fd7e14;">SAVE & MARK FOR REVIEW</button>
-    <button class="btn" id="mark-review" style="background: #007bff; color: #fff; border: 1px solid #007bff;">MARK FOR REVIEW & NEXT</button>
   </div>
-  <div class="nta-nav-row" style="display: flex; justify-content: space-between; margin-top: 20px;">
-    <div style="display: flex; gap: 10px;">
+  
+  <div class="nta-nav-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--line);">
+    <div style="display: flex; gap: 12px;">
       <button class="btn secondary" id="previous-question" ${currentIndex === 0 ? 'disabled' : ''}>&lt;&lt; BACK</button>
       <button class="btn secondary" id="next-question" ${currentIndex === list.length - 1 ? 'disabled' : ''}>NEXT &gt;&gt;</button>
     </div>
-    <button class="btn" id="submit-test" style="background: #dc3545; color: #fff; border: 1px solid #dc3545;">SUBMIT TEST</button>
+    <button class="btn btn-nta-submit" id="submit-test">SUBMIT TEST</button>
   </div>
   </section><aside class="question-map panel"><div class="eyebrow">Question paper</div><h3>Question map</h3><div class="map-grid">${map}</div><div class="map-legend"><span><i class="legend-dot answered-dot"></i> Answered</span><span><i class="legend-dot not-answered-dot"></i> Not Answered</span><span><i class="legend-dot review-dot"></i> Review</span><span><i class="legend-dot review-answered-dot"></i> Ans & Review</span></div><div class="map-summary"><strong>${Object.keys(session.answers).length}</strong> answered of ${list.length}</div></aside></div>`);
   
