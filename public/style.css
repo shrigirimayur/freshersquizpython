@@ -20,7 +20,8 @@ body {
   font-family: "Space Grotesk", sans-serif;
 }
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 button {
@@ -131,7 +132,8 @@ label {
     monospace;
   text-transform: uppercase;
 }
-input {
+input,
+textarea {
   width: 100%;
   min-width: 0;
   background: transparent;
@@ -139,6 +141,7 @@ input {
   border-bottom: 2px solid var(--ink);
   padding: 9px 0;
   outline: 0;
+  resize: vertical;
 }
 .btn {
   padding: 13px 17px;
@@ -489,9 +492,9 @@ th {
   padding: 8px 10px;
   font-size: 12px;
 }
-.table {
-  display: block;
+.table-wrapper {
   overflow-x: auto;
+  width: 100%;
 }
 .table th,
 .table td {

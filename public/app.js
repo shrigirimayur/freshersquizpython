@@ -17,6 +17,26 @@ let currentSelectionIndex = null;
 let currentQuestionId = null;
 let serverTimeOffset = 0;
 
+function getShuffledOptionIndices(questionId, numOptions, seedString) {
+  let hash = 0;
+  const str = seedString + "-" + questionId;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  let seed = hash;
+  function random() {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+  const indices = Array.from({ length: numOptions }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 const escapeHtml = (value) =>
   String(value).replace(
     /[&<>'"]/g,
@@ -327,7 +347,14 @@ function renderQuestion() {
     })
     .join("");
 
-  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2, "0")} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><div style="white-space: pre-wrap; line-height: 1.5; font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 24px; background: #f8f9fa; padding: 18px; border: 1px solid var(--line); border-radius: 4px; color: #1a1a1a;">${escapeHtml(question.prompt)}</div><div id="options">${question.options.map((option, index) => `<button class="option ${currentSelectionIndex === index ? "selected" : ""}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join("")}</div><div id="answer-status" class="notice" hidden></div>
+  const indices = getShuffledOptionIndices(question.id, question.options.length, session.participantId);
+  const optionsHtml = indices.map((originalIndex, renderedIndex) => {
+    const option = question.options[originalIndex];
+    const isSelected = currentSelectionIndex === originalIndex;
+    return `<button class="option ${isSelected ? "selected" : ""}" data-index="${originalIndex}"><span class="option-letter">${String.fromCharCode(65 + renderedIndex)}</span>${escapeHtml(option)}</button>`;
+  }).join("");
+
+  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2, "0")} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><div style="white-space: pre-wrap; line-height: 1.5; font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 24px; background: #f8f9fa; padding: 18px; border: 1px solid var(--line); border-radius: 4px; color: #1a1a1a;">${escapeHtml(question.prompt)}</div><div id="options">${optionsHtml}</div><div id="answer-status" class="notice" hidden></div>
   
   <div class="nta-action-row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line);">
     <button class="btn btn-nta-green" id="save-next">SAVE & NEXT</button>
