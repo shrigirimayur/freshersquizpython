@@ -322,11 +322,11 @@ function renderQuestion() {
     })
     .join("");
 
-  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2, "0")} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><h2>${escapeHtml(question.prompt)}</h2><div id="options">${question.options.map((option, index) => `<button class="option ${currentSelectionIndex === index ? "selected" : ""}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join("")}</div><div id="answer-status" class="notice" hidden></div>
+  base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2, "0")} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><div style="white-space: pre-wrap; line-height: 1.5; font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 24px; background: #f8f9fa; padding: 18px; border: 1px solid var(--line); border-radius: 4px; color: #1a1a1a;">${escapeHtml(question.prompt)}</div><div id="options">${question.options.map((option, index) => `<button class="option ${currentSelectionIndex === index ? "selected" : ""}" data-index="${index}"><span class="option-letter">${String.fromCharCode(65 + index)}</span>${escapeHtml(option)}</button>`).join("")}</div><div id="answer-status" class="notice" hidden></div>
   
   <div class="nta-action-row" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line);">
     <button class="btn btn-nta-green" id="save-next">SAVE & NEXT</button>
-    <button class="btn btn-nta-orange" id="save-review">SAVE & REVIEW</button>
+    <button class="btn btn-nta-blue" id="save-review">SAVE & REVIEW</button>
     <button class="btn btn-nta-purple" id="mark-review">REVIEW & NEXT</button>
     <button class="btn secondary" id="clear-response">CLEAR</button>
   </div>
