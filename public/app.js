@@ -130,12 +130,15 @@ function startHeartbeat() {
   clearInterval(heartbeatTimer);
   heartbeatTimer = setInterval(async () => {
     try {
-      await post("/api/session/heartbeat", {
+      const res = await post("/api/session/heartbeat", {
         participantId: session.participantId,
         sessionId: session.sessionId,
         tabId,
       });
       setConnection(true);
+      if (res.competitionState === "stopped" && competition?.state !== "stopped") {
+        renderParticipant();
+      }
     } catch (err) {
       setConnection(false);
       if (

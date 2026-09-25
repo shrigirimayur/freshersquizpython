@@ -253,7 +253,11 @@ function loadState() {
       if (data.sessions) {
         sessions.clear();
         for (const [k, v] of data.sessions) {
-          v.answers = new Map(Object.entries(v.answers || {}));
+          const answersMap = new Map();
+          for (const [key, val] of Object.entries(v.answers || {})) {
+            answersMap.set(Number(key), val);
+          }
+          v.answers = answersMap;
           v.reviewStatus = new Set(v.reviewStatus || []);
           sessions.set(k, v);
         }
@@ -356,16 +360,13 @@ function validIdentity(session, body) {
   );
 }
 function scoreSession(session) {
+  if (!questionBank || questionBank.length === 0) return 0;
   return Number(
     questionBank
-      .reduce(
-        (sum, item) =>
-          sum +
-          (session.answers.get(item.id) === item.correct
-            ? TOTAL_SCORE / questionBank.length
-            : 0),
-        0,
-      )
+      .reduce((sum, item) => {
+        const ans = session.answers.get(item.id) ?? session.answers.get(String(item.id));
+        return sum + (ans === item.correct ? TOTAL_SCORE / questionBank.length : 0);
+      }, 0)
       .toFixed(1),
   );
 }
@@ -516,7 +517,7 @@ async function route(req, res) {
       if (!validIdentity(session, body))
         return send(res, 403, { error: "Unauthorized or expired quiz tab." });
       session.lastHeartbeat = now();
-      return send(res, 200, { connected: true });
+      return send(res, 200, { connected: true, competitionState: competition.state });
     }
 
     if (url.pathname === "/api/session/state") {
