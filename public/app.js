@@ -252,6 +252,9 @@ async function renderParticipant() {
   session = state.session;
   if (!session) return renderHome();
   startExamClock();
+  
+  if (session.state === "waiting") return renderWaiting();
+  
   if (session.state === "ended" || competition?.state === "stopped")
     return renderStopped();
   if (
@@ -260,7 +263,7 @@ async function renderParticipant() {
     competition?.state === "answers"
   )
     return renderComplete();
-  if (session.state === "waiting") return renderWaiting();
+    
   if (competition.fullscreen && !document.fullscreenElement)
     return renderFullscreenGate();
   requestQuizFullscreen();
