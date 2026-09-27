@@ -673,10 +673,50 @@ tbody tr:hover td {
 }
 
 @media (max-width: 768px) {
-  .shell { padding: 16px 20px 40px; }
-  .grid, .home-grid, .exam-layout { grid-template-columns: 1fr; }
+  .shell { padding: 16px 16px 40px; }
+  
+  .grid, .home-grid, .exam-layout { 
+    grid-template-columns: 1fr; 
+    gap: 24px;
+  }
+  
   .room-stats { grid-template-columns: repeat(2, 1fr); }
-  .entry-meta { flex-wrap: wrap; gap: 20px; }
-  .question-map { position: static; order: -1; }
-  .map-grid { grid-template-columns: repeat(10, 1fr); }
+  .entry-meta { flex-wrap: wrap; gap: 16px; }
+  
+  /* Question Area Mobile Styling */
+  .question-stage {
+    padding: 24px 20px;
+  }
+  
+  .nta-action-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .nta-action-row .btn {
+    width: 100%;
+  }
+
+  /* Map Area Mobile Styling */
+  .question-map { 
+    position: static; 
+    padding: 24px;
+  }
+  
+  .map-grid { 
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); 
+    gap: 12px;
+  }
+
+  .question-map-item {
+    font-size: 15px; /* Larger font for easier tapping */
+  }
+
+  /* Organizer Mobile Tweak */
+  .stat-card {
+    padding: 16px;
+  }
+  .stat-card strong {
+    font-size: 32px;
+  }
 }

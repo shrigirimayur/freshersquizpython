@@ -82,8 +82,28 @@ function leaderboardRows(sessions) {
 }
 
 function questionRows(questions) {
+  const letters = ["A", "B", "C", "D"];
   return questions.length
-    ? `<div class="question-admin-list">${questions.map((question) => `<div class="rule"><span><strong>Q${question.id}</strong> ${escapeHtml(question.prompt)}</span><span class="actions"><button class="btn secondary edit-question" data-question-id="${question.id}">EDIT</button><button class="btn alert delete-question" data-question-id="${question.id}">DELETE</button></span></div>`).join("")}</div>`
+    ? `<div class="question-admin-list">${questions
+        .map((question) => {
+          const correctLetter = letters[question.correct] || "A";
+          const correctText = question.options?.[question.correct] || "";
+          return `<div class="rule" style="align-items: flex-start;">
+            <div style="flex: 1; min-width: 0; padding-right: 12px;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                <strong>Q${question.id}</strong>
+                <span class="tag" style="background: #14251f; color: #d7f36b; font-weight: 700; font-size: 11px; padding: 3px 8px; border-radius: 4px;">Correct: Option ${correctLetter}</span>
+                ${correctText ? `<span class="muted" style="font-size: 12px; font-weight: 500;">(${escapeHtml(correctText)})</span>` : ""}
+              </div>
+              <div style="font-size: 13.5px; line-height: 1.45;">${escapeHtml(question.prompt)}</div>
+            </div>
+            <span class="actions" style="margin-top: 0; flex-shrink: 0;">
+              <button class="btn secondary edit-question" data-question-id="${question.id}">EDIT</button>
+              <button class="btn alert delete-question" data-question-id="${question.id}">DELETE</button>
+            </span>
+          </div>`;
+        })
+        .join("")}</div>`
     : '<p class="muted">No questions configured.</p>';
 }
 
@@ -111,7 +131,7 @@ async function renderRoom() {
     ];
     const questions = state.questions || [];
     shell(
-      `<section class="hero"><div class="eyebrow">Restricted organizer console</div><h1>Run the room.</h1><p class="subhead">Students can log in before the test. Select the online students, choose the duration, then start the test.</p><div class="actions"><button class="btn" id="start">START TEST</button><button class="btn alert" id="stop">STOP TEST</button><button class="btn secondary" id="results">REVEAL RESULTS</button><button class="btn secondary" id="answers">REVEAL ANSWERS</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: end; margin-top: 24px;"><div class="notice" style="margin:0;">Current state: <strong id="current-state">${escapeHtml(state.competition.state)}</strong> <span id="test-clock">${state.competition.endsAt ? `ends ${new Date(state.competition.endsAt).toLocaleTimeString()}` : ""}</span></div><div class="field" style="margin:0;"><label for="reveal-duration">Reveal duration in minutes</label><input id="reveal-duration" type="number" min="1" max="180" value="${state.competition.revealDurationMinutes || 10}"></div></div></section><section class="grid"><div class="panel"><div class="eyebrow">Select students</div><p class="muted">Students who have opened the participant page appear below as online.</p><div class="field"><input id="student-name" placeholder="Student name"><button class="btn secondary" id="add-student">ADD STUDENT</button></div><div>${candidates.length ? candidates.map((name) => `<label class="rule"><span>${escapeHtml(name)}</span><input type="checkbox" data-name="${escapeHtml(name)}" ${selected.has(name) ? "checked" : ""}></label>`).join("") : '<p class="muted">No students logged in yet.</p>'}</div><button class="btn secondary" id="select-all">SELECT ALL</button><label class="field"><span>Test duration in minutes</span><input id="duration-minutes" type="number" min="1" max="180" value="${state.competition.durationMinutes || 30}"></label></div><div class="panel orange"><div class="eyebrow">Question bank</div><div style="display: flex; flex-direction: column; gap: 12px; margin: 20px 0;"><textarea id="question-text" placeholder="Question prompt" rows="4"></textarea><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"><input id="option-a" placeholder="Option A"><input id="option-b" placeholder="Option B"><input id="option-c" placeholder="Option C"><input id="option-d" placeholder="Option D"></div><div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;"><input id="correct-index" placeholder="Correct index: 0-3"><textarea id="explanation" placeholder="Explanation" rows="2"></textarea></div><button class="btn" id="add-question" style="align-self: flex-start; margin-top: 8px;">ADD QUESTION</button></div>${questionRows(questions)}</div></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Live monitoring</div><div class="table-wrapper"><table class="table"><thead><tr><th>Participant</th><th>Connection</th><th>Session</th><th>Tab status</th><th>Actions</th></tr></thead><tbody id="monitor-body">${monitorRows(state.sessions)}</tbody></table></div></section><section class="panel" style="margin-top:20px"><div class="eyebrow">Leaderboard</div><div class="table-wrapper"><table class="table"><thead><tr><th>Rank</th><th>Participant</th><th>Score</th><th>Status</th></tr></thead><tbody id="leaderboard-body">${leaderboardRows(state.sessions)}</tbody></table></div></section>`,
+      `<section class="hero"><div class="eyebrow">Restricted organizer console</div><h1>Run the room.</h1><p class="subhead">Students can log in before the test. Select the online students, choose the duration, then start the test.</p><div class="actions"><button class="btn" id="start">START TEST</button><button class="btn alert" id="stop">STOP TEST</button><button class="btn secondary" id="results">REVEAL RESULTS</button><button class="btn secondary" id="answers">REVEAL ANSWERS</button></div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: end; margin-top: 24px;"><div class="notice" style="margin:0;">Current state: <strong id="current-state">${escapeHtml(state.competition.state)}</strong> <span id="test-clock">${state.competition.endsAt ? `ends ${new Date(state.competition.endsAt).toLocaleTimeString()}` : ""}</span></div><div class="field" style="margin:0;"><label for="reveal-duration">Reveal duration in minutes</label><input id="reveal-duration" type="number" min="1" max="180" value="${state.competition.revealDurationMinutes || 10}"></div></div></section><section class="panel" style="margin-top:20px; margin-bottom:20px;"><div class="eyebrow">Live monitoring</div><div class="table-wrapper"><table class="table"><thead><tr><th>Participant</th><th>Connection</th><th>Session</th><th>Tab status</th><th>Actions</th></tr></thead><tbody id="monitor-body">${monitorRows(state.sessions)}</tbody></table></div></section><section class="panel" style="margin-top:20px; margin-bottom:32px;"><div class="eyebrow">Leaderboard</div><div class="table-wrapper"><table class="table"><thead><tr><th>Rank</th><th>Participant</th><th>Score</th><th>Status</th></tr></thead><tbody id="leaderboard-body">${leaderboardRows(state.sessions)}</tbody></table></div></section><section class="grid"><div class="panel"><div class="eyebrow">Select students</div><p class="muted">Students who have opened the participant page appear below as online.</p><div class="field"><input id="student-name" placeholder="Student name"><button class="btn secondary" id="add-student">ADD STUDENT</button></div><div>${candidates.length ? candidates.map((name) => `<label class="rule" style="margin-bottom:8px"><span>${escapeHtml(name)}</span><input type="checkbox" data-name="${escapeHtml(name)}" ${selected.has(name) ? "checked" : ""}></label>`).join("") : '<p class="muted">No students logged in yet.</p>'}</div><button class="btn secondary" id="select-all" style="margin-top: 12px; margin-bottom: 24px;">SELECT ALL</button><label class="field"><span>Test duration in minutes</span><input id="duration-minutes" type="number" min="1" max="180" value="${state.competition.durationMinutes || 30}"></label></div><div class="panel orange"><div class="eyebrow" style="color: #451b0a;">Question bank</div><div style="display: flex; flex-direction: column; gap: 14px; margin: 20px 0;"><div class="field" style="margin: 0;"><label for="question-text" style="font-weight: 700; color: #29160e;">Question Prompt</label><textarea id="question-text" placeholder="Enter question prompt..." rows="3"></textarea></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"><div class="field" style="margin: 0;"><label for="option-a" style="font-size: 11px; font-weight: 700; color: #29160e;">Option A</label><input id="option-a" placeholder="Option A text"></div><div class="field" style="margin: 0;"><label for="option-b" style="font-size: 11px; font-weight: 700; color: #29160e;">Option B</label><input id="option-b" placeholder="Option B text"></div><div class="field" style="margin: 0;"><label for="option-c" style="font-size: 11px; font-weight: 700; color: #29160e;">Option C</label><input id="option-c" placeholder="Option C text"></div><div class="field" style="margin: 0;"><label for="option-d" style="font-size: 11px; font-weight: 700; color: #29160e;">Option D</label><input id="option-d" placeholder="Option D text"></div></div><div style="display: grid; grid-template-columns: 1fr 1.6fr; gap: 12px; align-items: start;"><div class="field" style="margin: 0;"><label for="correct-index" style="font-weight: 700; color: #29160e;">Correct Option</label><select id="correct-index" style="background: #fff; font-weight: 700; cursor: pointer; color: #14251f;"><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option></select></div><div class="field" style="margin: 0;"><label for="explanation" style="font-weight: 700; color: #29160e;">Explanation (Optional)</label><textarea id="explanation" placeholder="Shown during answers review" rows="2" style="margin: 0;"></textarea></div></div><button class="btn" id="add-question" style="align-self: flex-start; margin-top: 4px;">ADD QUESTION</button></div>${questionRows(questions)}</div></section>`,
     );
     document
       .querySelector(".hero")
@@ -161,7 +181,9 @@ function questionForm(question) {
     document.querySelector(`#option-${letter}`).value =
       question?.options?.[index] || "";
   });
-  document.querySelector("#correct-index").value = question?.correct ?? "";
+  document.querySelector("#correct-index").value = String(
+    question?.correct ?? 0,
+  );
   document.querySelector("#explanation").value = question?.explanation || "";
 }
 function editQuestion(questionId, questions) {
@@ -305,7 +327,7 @@ function bindControls(roster) {
       question.correct > 3
     )
       return showRoomError(
-        "Fill the prompt, all four options, and a correct index from 0 to 3.",
+        "Please enter the question prompt, all 4 options, and select the correct option.",
       );
     try {
       const editingId =
@@ -316,6 +338,16 @@ function bindControls(roster) {
           : "/api/organizer/questions",
         editingId ? { questionId: Number(editingId), question } : { question },
       );
+      // Reset form
+      document.querySelector("#question-text").value = "";
+      ["a", "b", "c", "d"].forEach((letter) => {
+        document.querySelector(`#option-${letter}`).value = "";
+      });
+      document.querySelector("#correct-index").value = "0";
+      document.querySelector("#explanation").value = "";
+      const addBtn = document.querySelector("#add-question");
+      addBtn.textContent = "ADD QUESTION";
+      delete addBtn.dataset.editingId;
       await renderRoom();
     } catch (error) {
       showRoomError(error.message);

@@ -13,7 +13,7 @@ let waitingRefreshTimer;
 let violationCount = 0;
 let warningVisible = false;
 const MAX_VIOLATIONS = 5;
-let currentSelectionIndex = null;
+let currentAnswer = null;
 let currentQuestionId = null;
 let serverTimeOffset = 0;
 
@@ -76,7 +76,64 @@ function showBlocker(
 
 function renderHome() {
   base(
-    `<section class="hero"><div class="eyebrow">Python technical challenge / 2026</div><h1>One tab.<br>One shot.</h1><p class="subhead">Twenty questions. Fifty points. Your attempt is saved as you progress.</p><div class="entry-meta"><span><strong>20</strong> questions</span><span><strong>50</strong> points</span><span><strong>1</strong> active tab</span></div></section><section class="panel lime"><div class="eyebrow">Student waiting room</div><h2>Enter your name to begin</h2><p>Your name identifies your attempt. Use the same name if you reconnect.</p><div class="field"><label for="participant-name">Participant name</label><input id="participant-name" placeholder="e.g. Mayur Shrigiri" maxlength="60"></div><button class="btn" id="join">JOIN QUIZ</button><div id="join-error" class="notice" hidden></div></section>`,
+    `<div class="home-grid">
+      <div class="home-left">
+        <section class="hero">
+          <div class="eyebrow">Python technical challenge / 2026</div>
+          <h1>One tab.<br>One shot.</h1>
+          <p class="subhead">Twenty questions. Fifty points. Your attempt is saved as you progress.</p>
+          <div class="entry-meta">
+            <span><strong>20</strong> questions</span>
+            <span><strong>50</strong> points</span>
+            <span><strong>1</strong> active tab</span>
+          </div>
+        </section>
+        <section class="panel lime">
+          <div class="eyebrow">Student waiting room</div>
+          <h2>Enter your name to begin</h2>
+          <p>Your name identifies your attempt. Use the same name if you need to reconnect.</p>
+          <div class="field">
+            <label for="participant-name">Participant name</label>
+            <input id="participant-name" placeholder="e.g. Mayur Shrigiri" maxlength="60">
+          </div>
+          <button class="btn" id="join">JOIN QUIZ</button>
+          <div id="join-error" class="notice" hidden></div>
+        </section>
+      </div>
+      <div class="home-right">
+        <section class="panel">
+          <div class="eyebrow" style="color: var(--orange);">Read before entering</div>
+          <h2>Instructions & Rules</h2>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; flex: 1;">
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>1. Strict Single Tab</strong><br><small class="muted">Only 1 active browser tab allowed. Opening duplicate tabs immediately locks your session.</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>2. Tab-Switch Deterrent</strong><br><small class="muted">Switching tabs, exiting fullscreen, or losing focus records a violation (max 5 warnings before auto-submission).</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>3. Live Real-Time Auto-Save</strong><br><small class="muted">Every option chosen is synced to the server in real-time. Disconnections can be resumed seamlessly.</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>4. Question Palette Navigation</strong><br><small class="muted">Jump to any question anytime. Use "Mark for Review" to highlight questions you want to double-check.</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>5. Scoring & Evaluation</strong><br><small class="muted">20 questions, 50 points total (+2.5 marks per correct answer). No negative marking for wrong or skipped answers.</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0;">
+              <span><strong>6. Response & Answer Key Review</strong><br><small class="muted">Once the organizer reveals answers, you can review your exact selected responses compared side-by-side with official solutions and explanations.</small></span>
+            </div>
+            <div class="rule" style="padding: 8px 0; border-bottom: 0;">
+              <span><strong>7. Auto-Submission on Timer</strong><br><small class="muted">Answers lock permanently when you submit or when the test timer reaches zero.</small></span>
+            </div>
+          </div>
+          <div style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed var(--line); display: flex; align-items: center; justify-content: space-between;">
+            <span class="eyebrow" style="color: var(--muted); font-size: 11px;">Anti-cheat active</span>
+            <span class="tag" style="background: var(--lime); color: var(--ink); font-weight: 700; padding: 4px 10px; border-radius: 4px;">Good Luck!</span>
+          </div>
+        </section>
+      </div>
+    </div>`,
   );
   document.querySelector("#join").onclick = join;
 }
@@ -307,7 +364,42 @@ function renderFullscreenGate() {
 
 function renderWaiting() {
   base(
-    `<section class="hero"><div class="eyebrow">Waiting room / ${escapeHtml(session.participantName)}</div><h1>Stay ready.</h1><p class="subhead">The organizer has not started this test yet. This page will update automatically when your attempt is selected.</p></section><section class="panel lime"><div class="eyebrow">Session registered</div><div class="rule"><span>Session</span><strong>${session.sessionId.slice(0, 8).toUpperCase()}</strong></div><div class="rule"><span>Tab status</span><strong>ACTIVE QUIZ TAB</strong></div><div class="rule"><span>Test status</span><strong>WAITING FOR ORGANIZER</strong></div><p class="muted">Keep this one tab open. Do not refresh or open another quiz tab.</p></section>`,
+    `<div class="home-grid">
+      <div class="home-left">
+        <section class="hero">
+          <div class="eyebrow">Waiting room / ${escapeHtml(session.participantName)}</div>
+          <h1>Stay ready.</h1>
+          <p class="subhead">The organizer has not started this test yet. This page will update automatically when your attempt is selected.</p>
+        </section>
+        <section class="panel lime">
+          <div class="eyebrow">Session registered</div>
+          <div class="rule"><span>Session</span><strong>${session.sessionId.slice(0, 8).toUpperCase()}</strong></div>
+          <div class="rule"><span>Tab status</span><strong>ACTIVE QUIZ TAB</strong></div>
+          <div class="rule"><span>Test status</span><strong>WAITING FOR ORGANIZER</strong></div>
+          <p class="muted" style="margin-top: 18px;">Keep this one tab open. Do not refresh or open another quiz tab.</p>
+        </section>
+      </div>
+      <div class="home-right">
+        <section class="panel">
+          <div class="eyebrow" style="color: var(--orange);">Quick Instructions</div>
+          <h2>Test Guidelines</h2>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+            <div class="rule" style="padding: 10px 0;">
+              <span><strong>Timer:</strong> The countdown clock will start as soon as the test begins.</span>
+            </div>
+            <div class="rule" style="padding: 10px 0;">
+              <span><strong>Focus Lock:</strong> Keep your browser focused. Do not switch tabs.</span>
+            </div>
+            <div class="rule" style="padding: 10px 0;">
+              <span><strong>Real-time Save:</strong> Selected answers are saved automatically.</span>
+            </div>
+            <div class="rule" style="padding: 10px 0; border-bottom: 0;">
+              <span><strong>Question Map:</strong> Green = Answered, Purple = Marked for Review.</span>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>`,
   );
   waitingRefreshTimer = setInterval(() => renderParticipant(), 3000);
 }
@@ -324,10 +416,7 @@ function renderQuestion() {
 
   if (currentQuestionId !== question.id) {
     currentQuestionId = question.id;
-    currentSelectionIndex =
-      session.answers[question.id] !== undefined
-        ? session.answers[question.id]
-        : null;
+    currentAnswer = session.answers[question.id] !== undefined ? session.answers[question.id] : null;
   }
 
   if (!session.visited) session.visited = [];
@@ -347,12 +436,24 @@ function renderQuestion() {
     })
     .join("");
 
-  const indices = getShuffledOptionIndices(question.id, question.options.length, session.participantId);
-  const optionsHtml = indices.map((originalIndex, renderedIndex) => {
-    const option = question.options[originalIndex];
-    const isSelected = currentSelectionIndex === originalIndex;
-    return `<button class="option ${isSelected ? "selected" : ""}" data-index="${originalIndex}"><span class="option-letter">${String.fromCharCode(65 + renderedIndex)}</span>${escapeHtml(option)}</button>`;
-  }).join("");
+  let optionsHtml = "";
+  if (question.type === "integer") {
+    const val = currentAnswer !== null && currentAnswer !== undefined ? currentAnswer : "";
+    optionsHtml = `<div style="margin-top: 20px;"><input type="number" id="integer-answer" class="option-input" value="${escapeHtml(val)}" placeholder="Enter your answer" style="padding: 12px; font-size: 18px; width: 100%; border: 1px solid var(--line); border-radius: 4px;"></div>`;
+  } else {
+    const isMulti = question.type === "multiple";
+    const indices = getShuffledOptionIndices(question.id, question.options.length, session.participantId);
+    optionsHtml = indices.map((originalIndex, renderedIndex) => {
+      const option = question.options[originalIndex];
+      let isSelected = false;
+      if (isMulti) {
+        isSelected = Array.isArray(currentAnswer) && currentAnswer.includes(originalIndex);
+      } else {
+        isSelected = currentAnswer === originalIndex;
+      }
+      return `<button class="option ${isSelected ? "selected" : ""}" data-index="${originalIndex}"><span class="option-letter">${String.fromCharCode(65 + renderedIndex)}</span>${escapeHtml(option)}</button>`;
+    }).join("");
+  }
 
   base(`<div class="exam-layout"><section class="question-stage"><div class="progress"><span>QUESTION ${String(currentIndex + 1).padStart(2, "0")} / ${list.length}</span><span id="exam-clock">Time left --:--</span></div><div class="progress-line"><i style="width:${((currentIndex + 1) / list.length) * 100}%"></i></div><div class="eyebrow">${escapeHtml(session.participantName)} / active tab verified</div><div style="white-space: pre-wrap; line-height: 1.5; font-family: 'Consolas', 'Courier New', Courier, monospace; font-size: 16px; font-weight: 600; margin-bottom: 24px; background: #f8f9fa; padding: 18px; border: 1px solid var(--line); border-radius: 4px; color: #1a1a1a;">${escapeHtml(question.prompt)}</div><div id="options">${optionsHtml}</div><div id="answer-status" class="notice" hidden></div>
   
@@ -374,10 +475,26 @@ function renderQuestion() {
   document.querySelectorAll(".option").forEach(
     (button) =>
       (button.onclick = () => {
-        currentSelectionIndex = Number(button.dataset.index);
+        const idx = Number(button.dataset.index);
+        if (question.type === "multiple") {
+          let arr = Array.isArray(currentAnswer) ? [...currentAnswer] : [];
+          if (arr.includes(idx)) arr = arr.filter(v => v !== idx);
+          else arr.push(idx);
+          currentAnswer = arr;
+        } else {
+          currentAnswer = idx;
+        }
         renderQuestion();
       }),
   );
+  
+  const intInput = document.querySelector("#integer-answer");
+  if (intInput) {
+    intInput.oninput = (e) => {
+      const val = parseInt(e.target.value, 10);
+      currentAnswer = isNaN(val) ? null : val;
+    };
+  }
 
   document.querySelectorAll("[data-question-index]").forEach(
     (button) =>
@@ -399,7 +516,7 @@ function renderQuestion() {
   const nextIndex = Math.min(currentIndex + 1, list.length - 1);
 
   document.querySelector("#clear-response").onclick = () => {
-    currentSelectionIndex = null;
+    currentAnswer = null;
     submitAnswer(question, {
       action: "clear",
       nextQuestionIndex: currentIndex,
@@ -407,21 +524,21 @@ function renderQuestion() {
   };
 
   document.querySelector("#save-review").onclick = () => {
-    if (currentSelectionIndex === null)
+    if (currentAnswer === null || (Array.isArray(currentAnswer) && currentAnswer.length === 0))
       return alert("Please select an option first.");
     submitAnswer(question, {
       action: "mark_review",
-      optionIndex: currentSelectionIndex,
+      answer: currentAnswer,
       nextQuestionIndex: nextIndex,
     });
   };
 
   document.querySelector("#save-next").onclick = () => {
-    if (currentSelectionIndex === null)
+    if (currentAnswer === null || (Array.isArray(currentAnswer) && currentAnswer.length === 0))
       return alert("Please select an option first.");
     submitAnswer(question, {
       action: "save",
-      optionIndex: currentSelectionIndex,
+      answer: currentAnswer,
       nextQuestionIndex: nextIndex,
     });
   };
@@ -469,19 +586,85 @@ async function renderComplete() {
   const answersVisible = revealOpen && state.competition.state === "answers";
   const questionList = session.questions || [];
   const details = answersVisible
-    ? questionList
-        .map(
-          (question) =>
-            `<div class="rule"><span>${question.id}. ${escapeHtml(question.prompt)}</span><strong>${escapeHtml(question.options[question.correct] || "")}</strong></div>`,
-        )
-        .join("")
+    ? (() => {
+        const letters = ["A", "B", "C", "D"];
+        const cards = questionList
+          .map((question, index) => {
+            const userSelection = session.answers?.[question.id];
+            const hasAnswered =
+              userSelection !== undefined &&
+              userSelection !== null &&
+              userSelection !== "";
+            const isCorrect =
+              hasAnswered && Number(userSelection) === Number(question.correct);
+            const correctLetter = letters[question.correct] || "A";
+            const correctText = question.options?.[question.correct] || "";
+            const userLetter = hasAnswered ? letters[userSelection] || "?" : "";
+            const userText = hasAnswered
+              ? question.options?.[userSelection] || ""
+              : "No answer provided";
+
+            let badgeHtml = "";
+            if (isCorrect) {
+              badgeHtml = `<span class="tag" style="background:#e6f9e6; color:#1b732b; border:1px solid #b2e6b8; font-weight:700; padding:4px 10px; border-radius:4px;">✓ CORRECT (+2.5 pts)</span>`;
+            } else if (!hasAnswered) {
+              badgeHtml = `<span class="tag" style="background:#fef7e0; color:#8d6800; border:1px solid #fae69e; font-weight:700; padding:4px 10px; border-radius:4px;">— SKIPPED (0 pts)</span>`;
+            } else {
+              badgeHtml = `<span class="tag warn" style="background:#fde8e8; color:#9c1c1c; border:1px solid #f8b4b4; font-weight:700; padding:4px 10px; border-radius:4px;">✗ INCORRECT (0 pts)</span>`;
+            }
+
+            return `<div style="border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; background: var(--white); box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+                <div style="font-weight:700; font-size:15px; flex:1; min-width:240px; line-height: 1.45;">
+                  <span style="color:var(--orange); margin-right:6px;">Q${index + 1}.</span>${escapeHtml(question.prompt)}
+                </div>
+                ${badgeHtml}
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px; margin-top:14px;">
+                <div style="padding:10px 14px; border-radius:6px; border:1px solid ${isCorrect ? "#b2e6b8" : hasAnswered ? "#f8b4b4" : "var(--line)"}; background:${isCorrect ? "#f3faf3" : hasAnswered ? "#fff5f5" : "#fcfcfc"};">
+                  <span class="eyebrow" style="font-size:10.5px; color:${hasAnswered ? (isCorrect ? "#1b732b" : "#9c1c1c") : "var(--muted)"}; display:block; margin-bottom:4px;">YOUR SUBMITTED RESPONSE</span>
+                  <div style="font-weight:600; font-size:13.5px; color:${hasAnswered ? (isCorrect ? "#1b732b" : "#9c1c1c") : "var(--muted)"};">
+                    ${hasAnswered ? `Option ${userLetter}: ${escapeHtml(userText)}` : "<i>(Unanswered)</i>"}
+                  </div>
+                </div>
+                <div style="padding:10px 14px; border-radius:6px; border:1px solid #b2e6b8; background:#f3faf3;">
+                  <span class="eyebrow" style="font-size:10.5px; color:#1b732b; display:block; margin-bottom:4px;">OFFICIAL CORRECT ANSWER</span>
+                  <div style="font-weight:600; font-size:13.5px; color:#1b732b;">
+                    Option ${correctLetter}: ${escapeHtml(correctText)}
+                  </div>
+                </div>
+              </div>
+              ${
+                question.explanation
+                  ? `<div style="margin-top:12px; padding:10px 14px; background:#fffbf3; border-left:3px solid var(--orange); border-radius:0 6px 6px 0; font-size:13px; line-height:1.45; color:var(--ink);">
+                      <strong style="color:#b3531b; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:2px;">Explanation</strong>
+                      ${escapeHtml(question.explanation)}
+                    </div>`
+                  : ""
+              }
+            </div>`;
+          })
+          .join("");
+        return `<section class="panel" style="margin-top:24px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid var(--line); padding-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div class="eyebrow" style="color:var(--orange);">Detailed Response Analysis</div>
+              <h2 style="margin:4px 0 0;">Answer Key & Your Responses</h2>
+            </div>
+            <div style="font-size:12px; color:var(--muted); font-family:'DM Mono', monospace;">
+              Total: ${questionList.length} Questions
+            </div>
+          </div>
+          ${cards}
+        </section>`;
+      })()
     : "";
   const countdown =
     revealOpen && state.competition.revealEndsAt
       ? `<p class="muted">This reveal closes in ${formatDuration(state.competition.revealEndsAt - Date.now())}.</p>`
       : "";
   base(
-    `<section class="hero"><div class="eyebrow">Submission received</div><h1>Quiz submitted.</h1><p class="subhead">Your answers are stored on the server. Stay in this tab while the organizer prepares the next reveal.</p></section><section class="panel lime"><div class="eyebrow">${resultsVisible ? "Results revealed" : "Waiting for organizer"}</div>${resultsVisible ? `<div class="score">${session.score ?? "—"} / 50</div><p>YOUR SCORE</p>${countdown}` : `<h2>${state.competition.state === "results" || state.competition.state === "answers" ? "Reveal window closed." : "Keep your place."}</h2><p>${state.competition.state === "results" || state.competition.state === "answers" ? "The organizer can open another controlled reveal window." : "Your score and the answer key are hidden until the organizer reveals them."}</p>`}</section>${details ? `<section class="panel" style="margin-top:20px"><div class="eyebrow">Answer key and explanations</div>${details}</section>` : ""}`,
+    `<section class="hero"><div class="eyebrow">Submission received</div><h1>Quiz submitted.</h1><p class="subhead">Your answers are stored on the server. Stay in this tab while the organizer prepares the next reveal.</p></section><section class="panel lime"><div class="eyebrow">${resultsVisible ? "Results revealed" : "Waiting for organizer"}</div>${resultsVisible ? `<div class="score">${session.score ?? "—"} / 50</div><p>YOUR SCORE</p>${countdown}` : `<h2>${state.competition.state === "results" || state.competition.state === "answers" ? "Reveal window closed." : "Keep your place."}</h2><p>${state.competition.state === "results" || state.competition.state === "answers" ? "The organizer can open another controlled reveal window." : "Your score and the answer key are hidden until the organizer reveals them."}</p>`}</section>${details}`,
   );
   if (revealOpen && state.competition.revealEndsAt)
     setTimeout(

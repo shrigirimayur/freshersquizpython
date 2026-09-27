@@ -366,7 +366,13 @@ function scoreSession(session) {
     questionBank
       .reduce((sum, item) => {
         const ans = session.answers.get(item.id) ?? session.answers.get(String(item.id));
-        return sum + (ans === item.correct ? TOTAL_SCORE / questionBank.length : 0);
+        let isCorrect = false;
+        if (item.type === "multiple") {
+          isCorrect = Array.isArray(ans) && ans.length === item.correct.length && ans.every(v => item.correct.includes(v));
+        } else {
+          isCorrect = (ans === item.correct);
+        }
+        return sum + (isCorrect ? (item.points || (TOTAL_SCORE / questionBank.length)) : 0);
       }, 0)
       .toFixed(1),
   );
@@ -583,14 +589,21 @@ async function route(req, res) {
         session.answers.delete(question.id);
         session.reviewStatus.delete(question.id);
       } else {
-        if (body.optionIndex !== undefined && body.optionIndex !== null) {
-          if (
-            !Number.isInteger(body.optionIndex) ||
-            body.optionIndex < 0 ||
-            body.optionIndex >= question.options.length
-          )
-            return send(res, 400, { error: "Invalid answer." });
-          session.answers.set(question.id, body.optionIndex);
+        if (body.answer !== undefined && body.answer !== null) {
+          if (question.type === "single") {
+            if (!Number.isInteger(body.answer) || body.answer < 0 || body.answer >= question.options.length)
+              return send(res, 400, { error: "Invalid answer." });
+          } else if (question.type === "multiple") {
+            if (!Array.isArray(body.answer) || body.answer.some(a => !Number.isInteger(a) || a < 0 || a >= question.options.length))
+              return send(res, 400, { error: "Invalid answer." });
+          } else if (question.type === "integer") {
+            if (!Number.isInteger(body.answer))
+              return send(res, 400, { error: "Invalid answer." });
+          } else {
+            // fallback for older structure just in case
+            if (!Number.isInteger(body.answer)) return send(res, 400, { error: "Invalid answer." });
+          }
+          session.answers.set(question.id, body.answer);
         }
         if (body.action === "mark_review") {
           session.reviewStatus.add(question.id);
